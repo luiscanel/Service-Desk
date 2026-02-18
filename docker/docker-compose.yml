@@ -1,0 +1,58 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: servicedesk-db
+    environment:
+      POSTGRES_USER: servicedesk
+      POSTGRES_PASSWORD: ChangeMe123
+      POSTGRES_DB: servicedesk
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - servicedesk-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: servicedesk-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - servicedesk-network
+
+  api:
+    build:
+      context: ../src/api
+      dockerfile: Dockerfile
+    container_name: servicedesk-api
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://servicedesk:ChangeMe123@postgres:5432/servicedesk
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - servicedesk-network
+
+  web:
+    build:
+      context: ../src/web
+      dockerfile: Dockerfile
+    container_name: servicedesk-web
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+    networks:
+      - servicedesk-network
+
+volumes:
+  postgres_data:
+
+networks:
+  servicedesk-network:
+    driver: bridge

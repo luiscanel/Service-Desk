@@ -1,0 +1,46 @@
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+
+@Entity('scheduled_reports')
+export class ScheduledReport {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column()
+  name: string;
+
+  @Column()
+  reportType: string;
+
+  @Column()
+  frequency: string;
+
+  @Column({ nullable: true })
+  cronExpression: string;
+
+  @Column({ nullable: true })
+  dayOfWeek: number;
+
+  @Column({ nullable: true })
+  dayOfMonth: number;
+
+  @Column()
+  recipients: string;
+
+  @Column({ type: 'jsonb', nullable: true })
+  filters: any;
+
+  @Column({ default: true })
+  isActive: boolean;
+
+  @Column({ nullable: true })
+  lastRunAt: Date;
+
+  @Column({ nullable: true })
+  nextRunAt: Date;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+}
