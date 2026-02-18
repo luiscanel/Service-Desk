@@ -56,4 +56,34 @@ export class TicketsController {
   getApprovalsStats() {
     return this.ticketsService.getApprovalsStats();
   }
+
+  // === Endpoints de encuesta ===
+  @Post(':id/close')
+  @ApiOperation({ summary: 'Close ticket and send survey' })
+  closeTicket(@Param('id') id: string) {
+    return this.ticketsService.closeTicket(id);
+  }
+
+  @Post(':id/send-survey')
+  @ApiOperation({ summary: 'Send satisfaction survey manually' })
+  sendSurvey(@Param('id') id: string) {
+    return this.ticketsService.findOne(id).then(ticket => 
+      this.ticketsService.sendSatisfactionSurvey(ticket)
+    );
+  }
+
+  @Post(':id/survey')
+  @ApiOperation({ summary: 'Submit satisfaction survey' })
+  submitSurvey(
+    @Param('id') id: string,
+    @Body() body: { satisfactionRating?: number; technicalRating?: number; responseTimeRating?: number; surveyComment?: string },
+  ) {
+    return this.ticketsService.submitSurvey(id, body);
+  }
+
+  @Get('stats/satisfaction')
+  @ApiOperation({ summary: 'Get satisfaction metrics' })
+  getSatisfactionMetrics() {
+    return this.ticketsService.getSatisfactionMetrics();
+  }
 }

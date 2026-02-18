@@ -67,6 +67,28 @@ export class Ticket {
   @Column({ nullable: true })
   clientFeedback: string
 
+  // Encuesta de satisfacción
+  @Column({ nullable: true })
+  satisfactionRating: number  // 1-5
+
+  @Column({ nullable: true })
+  technicalRating: number  // 1-5 - Qué tan bien se resolvió el problema
+
+  @Column({ nullable: true })
+  responseTimeRating: number  // 1-5 - Tiempo de respuesta
+
+  @Column({ nullable: true })
+  surveyComment: string
+
+  @Column({ type: 'timestamp', nullable: true })
+  surveySentAt: Date
+
+  @Column({ type: 'timestamp', nullable: true })
+  surveyAnsweredAt: Date
+
+  @Column({ default: false })
+  surveySent: boolean
+
   @Column({ default: false })
   approvalRequired: boolean
 
