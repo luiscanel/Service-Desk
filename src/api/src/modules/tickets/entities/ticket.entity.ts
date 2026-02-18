@@ -1,5 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { Agent } from '../../agents/entities/agent.entity';
 
 export enum TicketStatus {
   NEW = 'new',
@@ -18,11 +19,19 @@ export enum TicketPriority {
 }
 
 @Entity('tickets')
+@Index('idx_tickets_ticketNumber', ['ticketNumber'], { unique: true })
+@Index('idx_tickets_status', ['status'])
+@Index('idx_tickets_priority', ['priority'])
+@Index('idx_tickets_assignedToId', ['assignedToId'])
+@Index('idx_tickets_requesterId', ['requesterId'])
+@Index('idx_tickets_createdAt', ['createdAt'])
+@Index('idx_tickets_slaDeadline', ['slaDeadline'])
 export class Ticket {
   @PrimaryGeneratedColumn('uuid')
   id: string
 
-  @Column()
+  @Column({ unique: true })
+  @Index('idx_tickets_ticketNumber')
   ticketNumber: string
 
   @Column()
@@ -32,29 +41,41 @@ export class Ticket {
   description: string
 
   @Column({ type: 'enum', enum: TicketStatus, default: TicketStatus.NEW })
+  @Index('idx_tickets_status')
   status: TicketStatus
 
   @Column({ type: 'enum', enum: TicketPriority, default: TicketPriority.MEDIUM })
+  @Index('idx_tickets_priority')
   priority: TicketPriority
 
   @Column({ nullable: true })
   category: string
 
   @Column({ nullable: true })
+  @Index('idx_tickets_assignedToId')
   assignedToId: string
 
+  @ManyToOne(() => Agent, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'assignedToId' })
+  assignedTo: Agent;
+
   @Column({ nullable: true })
+  @Index('idx_tickets_requesterId')
   requesterId: string
+
+  @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'requesterId' })
+  requester: User;
 
   @Column({ nullable: true })
   requesterEmail: string
 
-  // Timestamps para SLA automático
   @Column({ type: 'timestamp', nullable: true })
-  assignedAt: Date  // Cuando se auto-asigna
+  @Index('idx_tickets_assignedAt')
+  assignedAt: Date
 
   @Column({ type: 'timestamp', nullable: true })
-  attendingAt: Date  // Cuando técnico inicia atención
+  attendingAt: Date
 
   @Column({ type: 'timestamp', nullable: true })
   resolvedAt: Date
@@ -63,6 +84,7 @@ export class Ticket {
   closedAt: Date
 
   @Column({ type: 'timestamp', nullable: true })
+  @Index('idx_tickets_slaDeadline')
   slaDeadline: Date
 
   @Column({ type: 'jsonb', nullable: true })
@@ -74,15 +96,14 @@ export class Ticket {
   @Column({ nullable: true })
   clientFeedback: string
 
-  // Encuesta de satisfacción
   @Column({ nullable: true })
-  satisfactionRating: number  // 1-5
+  satisfactionRating: number
 
   @Column({ nullable: true })
-  technicalRating: number  // 1-5 - Qué tan bien se resolvió el problema
+  technicalRating: number
 
   @Column({ nullable: true })
-  responseTimeRating: number  // 1-5 - Tiempo de respuesta
+  responseTimeRating: number
 
   @Column({ nullable: true })
   surveyComment: string
@@ -121,6 +142,7 @@ export class Ticket {
   attachments: any[]
 
   @CreateDateColumn()
+  @Index('idx_tickets_createdAt')
   createdAt: Date
 
   @UpdateDateColumn()

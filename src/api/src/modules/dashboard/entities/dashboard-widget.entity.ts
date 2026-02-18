@@ -1,11 +1,13 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
 
 @Entity('dashboard_widgets')
+@Index('idx_widgets_userId', ['userId'])
 export class DashboardWidget {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column()
+  @Index('idx_widgets_userId')
   userId: string;
 
   @Column()

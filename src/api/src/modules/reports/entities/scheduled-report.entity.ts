@@ -1,6 +1,9 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
 
 @Entity('scheduled_reports')
+@Index('idx_reports_userId', ['userId'])
+@Index('idx_reports_isActive', ['isActive'])
+@Index('idx_reports_nextRunAt', ['nextRunAt'])
 export class ScheduledReport {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -30,12 +33,17 @@ export class ScheduledReport {
   filters: any;
 
   @Column({ default: true })
+  @Index('idx_reports_isActive')
   isActive: boolean;
+
+  @Column({ nullable: true })
+  userId: string;
 
   @Column({ nullable: true })
   lastRunAt: Date;
 
   @Column({ nullable: true })
+  @Index('idx_reports_nextRunAt')
   nextRunAt: Date;
 
   @CreateDateColumn()
