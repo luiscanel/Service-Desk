@@ -40,7 +40,7 @@ export function LoginPage() {
               🎫
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-white">Service Desk</h1>
+              <h1 className="text-3xl font-bold text-white">Teknao</h1>
               <p className="text-blue-400">Enterprise Solution</p>
             </div>
           </div>
@@ -92,7 +92,7 @@ export function LoginPage() {
               🎫
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-800">Service Desk</h1>
+              <h1 className="text-xl font-bold text-slate-800">Teknao</h1>
               <p className="text-xs text-slate-500">Enterprise</p>
             </div>
           </div>

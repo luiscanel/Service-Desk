@@ -1,0 +1,37 @@
+import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
+import { TimeTrackingService } from './time-tracking.service';
+
+@Controller('time-tracking')
+export class TimeTrackingController {
+  constructor(private readonly service: TimeTrackingService) {}
+
+  @Get()
+  findAll(@Query('ticketId') ticketId?: string) {
+    return this.service.findAll(ticketId);
+  }
+
+  @Get('stats')
+  getStats(@Query('userId') userId?: string) {
+    return this.service.getStats(userId);
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.service.findOne(id);
+  }
+
+  @Post()
+  create(@Body() data: any) {
+    return this.service.create(data);
+  }
+
+  @Put(':id')
+  update(@Param('id') id: string, @Body() data: any) {
+    return this.service.update(id, data);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.service.remove(id);
+  }
+}

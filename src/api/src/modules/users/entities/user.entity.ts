@@ -10,6 +10,12 @@ export enum UserRole {
   USER = 'user',
 }
 
+export enum UserPlan {
+  BRONZE = 'bronze',
+  SILVER = 'silver',
+  GOLD = 'gold',
+}
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
@@ -29,6 +35,9 @@ export class User {
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
   role: UserRole;
+
+  @Column({ type: 'enum', enum: UserPlan, default: UserPlan.BRONZE })
+  plan: UserPlan;
 
   @Column({ default: true })
   isActive: boolean;

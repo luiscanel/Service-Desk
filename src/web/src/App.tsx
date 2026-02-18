@@ -16,6 +16,9 @@ import { PortalClientsPage } from './pages/portal/PortalClientsPage';
 import { ApprovalsPage } from './pages/approvals/ApprovalsPage';
 import { ScheduledReportsPage } from './pages/reports/ScheduledReportsPage';
 import { DashboardWidgetsPage } from './pages/dashboard/DashboardWidgetsPage';
+import { KnowledgeCategoriesPage } from './pages/knowledge-categories/KnowledgeCategoriesPage';
+import { TagsPage } from './pages/tags/TagsPage';
+import { TimeTrackingPage } from './pages/time-tracking/TimeTrackingPage';
 import { WebSocketProvider } from './services/websocket';
 
 function PrivateRoute() {
@@ -52,6 +55,9 @@ function App() {
             <Route path="approvals" element={<ApprovalsPage />} />
             <Route path="scheduled-reports" element={<ScheduledReportsPage />} />
             <Route path="dashboard-widgets" element={<DashboardWidgetsPage />} />
+            <Route path="knowledge-categories" element={<KnowledgeCategoriesPage />} />
+            <Route path="tags" element={<TagsPage />} />
+            <Route path="time-tracking" element={<TimeTrackingPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Routes>
