@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 
 interface ModalProps {
@@ -9,14 +8,8 @@ interface ModalProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalProps) {
-  const [show, setShow] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) setShow(true);
-  }, [isOpen]);
-
-  if (!show && !isOpen) return null;
+export function Modal({ isOpen = false, onClose, title, children, size = 'md' }: ModalProps) {
+  if (!isOpen) return null;
 
   const sizes = {
     sm: 'max-w-md',

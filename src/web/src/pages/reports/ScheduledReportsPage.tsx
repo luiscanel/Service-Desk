@@ -146,7 +146,7 @@ export function ScheduledReportsPage() {
 
       {/* Modal */}
       {showModal && (
-        <Modal onClose={() => setShowModal(false)} title="Nuevo Reporte Programado">
+        <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Nuevo Reporte Programado">
           <div className="space-y-4">
             <Input label="Nombre" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Reporte Semanal de Tickets" />
             <div>

@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Put, Param, Delete } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { MacrosService } from './macros.service';
+import { CreateMacroDto, UpdateMacroDto } from './dto/macro.dto';
 
 @ApiTags('Macros')
 @Controller('api/macros')
@@ -33,14 +34,14 @@ export class MacrosController {
 
   @Post()
   @ApiOperation({ summary: 'Create macro' })
-  async create(@Body() data: { name: string; category?: string; content: string; subject?: string }) {
-    return this.macrosService.create(data);
+  async create(@Body() dto: CreateMacroDto) {
+    return this.macrosService.create(dto);
   }
 
   @Put(':id')
   @ApiOperation({ summary: 'Update macro' })
-  async update(@Param('id') id: string, @Body() data: Partial<any>) {
-    return this.macrosService.update(id, data);
+  async update(@Param('id') id: string, @Body() dto: UpdateMacroDto) {
+    return this.macrosService.update(id, dto);
   }
 
   @Post(':id/use')

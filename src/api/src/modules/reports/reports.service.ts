@@ -1,36 +1,42 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { ScheduledReport } from './entities/scheduled-report.entity';
 import { Ticket, TicketStatus } from '../tickets/entities/ticket.entity';
 import { EmailService } from '../email/email.service';
+import { CreateScheduledReportDto, UpdateScheduledReportDto, ReportData } from './dto/report.dto';
 
 @Injectable()
 export class ReportsService {
   constructor(
     @InjectRepository(ScheduledReport)
-    private reportRepo: Repository<ScheduledReport>,
+    private readonly reportRepo: Repository<ScheduledReport>,
     @InjectRepository(Ticket)
-    private ticketRepo: Repository<Ticket>,
-    private emailService: EmailService,
+    private readonly ticketRepo: Repository<Ticket>,
+    private readonly emailService: EmailService,
   ) {}
 
   async findAll(): Promise<ScheduledReport[]> {
     return this.reportRepo.find({ order: { createdAt: 'DESC' } });
   }
 
-  async create(data: Partial<ScheduledReport>): Promise<ScheduledReport> {
-    const report = this.reportRepo.create(data);
+  async create(dto: CreateScheduledReportDto): Promise<ScheduledReport> {
+    const report = this.reportRepo.create(dto);
     return this.reportRepo.save(report);
   }
 
-  async update(id: string, data: Partial<ScheduledReport>): Promise<ScheduledReport> {
-    await this.reportRepo.update(id, data);
-    return this.reportRepo.findOne({ where: { id } });
+  async update(id: string, dto: UpdateScheduledReportDto): Promise<ScheduledReport> {
+    await this.reportRepo.update(id, dto as any);
+    const report = await this.reportRepo.findOne({ where: { id } });
+    if (!report) throw new NotFoundException(`Reporte ${id} no encontrado`);
+    return report;
   }
 
   async delete(id: string): Promise<void> {
-    await this.reportRepo.delete(id);
+    const result = await this.reportRepo.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Reporte ${id} no encontrado`);
+    }
   }
 
   async runReport(reportId: string): Promise<boolean> {
@@ -53,7 +59,7 @@ export class ReportsService {
     return sent;
   }
 
-  async generateReport(reportType: string, filters?: any): Promise<any> {
+  async generateReport(reportType: string, filters?: string): Promise<ReportData> {
     const now = new Date();
     let startDate = new Date();
     
@@ -78,28 +84,31 @@ export class ReportsService {
     const byStatus = tickets.reduce((acc, t) => {
       acc[t.status] = (acc[t.status] || 0) + 1;
       return acc;
-    }, {});
+    }, {} as Record<string, number>);
 
     const byPriority = tickets.reduce((acc, t) => {
       acc[t.priority] = (acc[t.priority] || 0) + 1;
       return acc;
-    }, {});
+    }, {} as Record<string, number>);
 
     const resolved = tickets.filter(t => t.status === TicketStatus.RESOLVED).length;
-    const avgTime = resolved > 0 ? 'N/A' : 'Sin datos';
 
     return {
       period: { start: startDate, end: now },
       total: tickets.length,
       resolved,
-      open: tickets.filter(t => t.status === TicketStatus.NEW || t.status === TicketStatus.ASSIGNED).length,
+      open: tickets.filter(t => 
+        t.status === TicketStatus.NEW || t.status === TicketStatus.ASSIGNED
+      ).length,
       byStatus,
       byPriority,
-      resolutionRate: tickets.length > 0 ? ((resolved / tickets.length) * 100).toFixed(1) : 0,
+      resolutionRate: tickets.length > 0 
+        ? ((resolved / tickets.length) * 100).toFixed(1) 
+        : '0',
     };
   }
 
-  formatReportHtml(name: string, type: string, data: any): string {
+  formatReportHtml(name: string, type: string, data: ReportData): string {
     return `
       <div style="font-family: Arial, max-width: 800px;">
         <h2>📊 ${name}</h2>
@@ -133,14 +142,11 @@ export class ReportsService {
     `;
   }
 
-  // Cron job to run scheduled reports
   async runDueReports() {
-    const now = new Date();
     const reports = await this.reportRepo.find({
-      where: { isActive: true, nextRunAt: undefined },
+      where: { isActive: true },
     });
 
-    // Run all active reports
     for (const report of reports) {
       await this.runReport(report.id);
     }

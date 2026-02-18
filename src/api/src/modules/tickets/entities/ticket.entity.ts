@@ -49,6 +49,13 @@ export class Ticket {
   @Column({ nullable: true })
   requesterEmail: string
 
+  // Timestamps para SLA automático
+  @Column({ type: 'timestamp', nullable: true })
+  assignedAt: Date  // Cuando se auto-asigna
+
+  @Column({ type: 'timestamp', nullable: true })
+  attendingAt: Date  // Cuando técnico inicia atención
+
   @Column({ type: 'timestamp', nullable: true })
   resolvedAt: Date
 

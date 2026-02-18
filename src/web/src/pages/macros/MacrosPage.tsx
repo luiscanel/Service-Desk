@@ -124,7 +124,7 @@ export function MacrosPage() {
 
       {/* Modal */}
       {showModal && (
-        <Modal onClose={() => setShowModal(false)} title={editing ? 'Editar Macro' : 'Nueva Macro'}>
+        <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editing ? 'Editar Macro' : 'Nueva Macro'}>
           <div className="space-y-4">
             <Input label="Nombre" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Saludo inicial" />
             <Input label="Categoría" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="General" />

@@ -15,9 +15,6 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { AttachmentsModule } from './modules/attachments/attachments.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { ReportsModule } from './modules/reports/reports.module';
-import { KnowledgeCategoriesModule } from './modules/knowledge-categories/knowledge-categories.module';
-import { TagsModule } from './modules/tags/tags.module';
-import { TimeTrackingModule } from './modules/time-tracking/time-tracking.module';
 import { Ticket } from './modules/tickets/entities/ticket.entity';
 import { User } from './modules/users/entities/user.entity';
 import { Agent } from './modules/agents/entities/agent.entity';
@@ -25,11 +22,7 @@ import { Setting } from './modules/settings/entities/setting.entity';
 import { Macro } from './modules/macros/entities/macro.entity';
 import { SlaPolicy } from './modules/sla/entities/sla-policy.entity';
 import { AuditLog } from './modules/audit/entities/audit-log.entity';
-import { DashboardWidget } from './modules/dashboard/entities/dashboard-widget.entity';
 import { ScheduledReport } from './modules/reports/entities/scheduled-report.entity';
-import { KnowledgeCategory } from './modules/knowledge-categories/entities/knowledge-category.entity';
-import { Tag } from './modules/tags/entities/tag.entity';
-import { TimeEntry } from './modules/time-tracking/entities/time-entry.entity';
 
 @Module({
   imports: [
@@ -41,7 +34,7 @@ import { TimeEntry } from './modules/time-tracking/entities/time-entry.entity';
       username: 'servicedesk',
       password: 'ChangeMe123',
       database: 'servicedesk',
-      entities: [Ticket, User, Agent, Setting, Macro, SlaPolicy, AuditLog, DashboardWidget, ScheduledReport, KnowledgeCategory, Tag, TimeEntry],
+      entities: [Ticket, User, Agent, Setting, Macro, SlaPolicy, AuditLog, ScheduledReport],
       synchronize: true,
     }),
     TicketsModule,
@@ -58,9 +51,6 @@ import { TimeEntry } from './modules/time-tracking/entities/time-entry.entity';
     AttachmentsModule,
     DashboardModule,
     ReportsModule,
-    KnowledgeCategoriesModule,
-    TagsModule,
-    TimeTrackingModule,
   ],
 })
 export class AppModule {}

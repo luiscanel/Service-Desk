@@ -171,7 +171,7 @@ export function SlaPoliciesPage() {
 
       {/* Modal */}
       {showModal && (
-        <Modal onClose={() => setShowModal(false)} title={editing ? 'Editar Política SLA' : 'Nueva Política SLA'}>
+        <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editing ? 'Editar Política SLA' : 'Nueva Política SLA'}>
           <div className="space-y-4">
             <Input label="Nombre" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Prioridad Alta" />
             <div>

@@ -1,15 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Ticket, TicketStatus } from './entities/ticket.entity';
 import { EmailService } from '../email/email.service';
+import { EMAIL_TEMPLATES } from '../../common/constants';
+import { CreateTicketDto, UpdateTicketDto, SurveyResponseDto } from './dto/ticket.dto';
 
 @Injectable()
 export class TicketsService {
   constructor(
     @InjectRepository(Ticket) 
-    private ticketRepository: Repository<Ticket>,
-    private emailService: EmailService,
+    private readonly ticketRepository: Repository<Ticket>,
+    private readonly emailService: EmailService,
   ) {}
 
   async findAll(): Promise<Ticket[]> {
@@ -17,37 +19,72 @@ export class TicketsService {
   }
 
   async findOne(id: string): Promise<Ticket> {
-    return this.ticketRepository.findOne({ where: { id } });
+    const ticket = await this.ticketRepository.findOne({ where: { id } });
+    if (!ticket) {
+      throw new NotFoundException(`Ticket ${id} no encontrado`);
+    }
+    return ticket;
   }
 
-  async create(data: Partial<Ticket>): Promise<Ticket> {
-    const ticket = this.ticketRepository.create(data);
+  async create(dto: CreateTicketDto): Promise<Ticket> {
+    const ticket = this.ticketRepository.create(dto);
     return this.ticketRepository.save(ticket);
   }
 
-  async update(id: string, data: Partial<Ticket>): Promise<Ticket> {
-    await this.ticketRepository.update(id, data);
+  async update(id: string, dto: UpdateTicketDto): Promise<Ticket> {
+    const ticket = await this.findOne(id);
+    const updates = this.calculateTimestampTransitions(ticket, dto);
+    
+    await this.ticketRepository.update(id, { ...dto, ...updates });
     return this.findOne(id);
   }
 
   async remove(id: string): Promise<void> {
-    await this.ticketRepository.delete(id);
+    const result = await this.ticketRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Ticket ${id} no encontrado`);
+    }
+  }
+
+  // === Calcular timestamps según transición de estado ===
+  private calculateTimestampTransitions(ticket: Ticket, updates: Partial<Ticket>): Partial<Ticket> {
+    const result: Partial<Ticket> = {};
+
+    // NEW → ASSIGNED
+    if (updates.status && updates.status !== TicketStatus.NEW && !ticket.assignedAt) {
+      result.assignedAt = new Date();
+    }
+
+    // ASSIGNED → IN_PROGRESS
+    if (updates.status === TicketStatus.IN_PROGRESS && !ticket.attendingAt) {
+      result.attendingAt = new Date();
+    }
+
+    // IN_PROGRESS → RESOLVED
+    if (updates.status === TicketStatus.RESOLVED && !ticket.resolvedAt) {
+      result.resolvedAt = new Date();
+    }
+
+    // RESOLVED → CLOSED
+    if (updates.status === TicketStatus.CLOSED && !ticket.closedAt) {
+      result.closedAt = new Date();
+    }
+
+    return result;
   }
 
   // === Cerrar ticket y enviar encuesta ===
   async closeTicket(id: string): Promise<Ticket> {
     const ticket = await this.findOne(id);
-    if (!ticket) return null;
 
-    // Marcar como cerrado
     await this.ticketRepository.update(id, {
       status: TicketStatus.CLOSED,
       closedAt: new Date(),
-    } as any);
+    });
 
     const updatedTicket = await this.findOne(id);
 
-    // Enviar encuesta de satisfacción
+    // Enviar encuesta si no se ha enviado
     if (ticket.requesterEmail && !ticket.surveySent) {
       await this.sendSatisfactionSurvey(ticket);
     }
@@ -60,64 +97,38 @@ export class TicketsService {
     await this.ticketRepository.update(ticket.id, {
       surveySent: true,
       surveySentAt: new Date(),
-    } as any);
+    });
 
     await this.emailService.sendEmail({
       to: ticket.requesterEmail,
       subject: `¿Cómo fue tu experiencia? - Ticket ${ticket.ticketNumber}`,
-      html: `
-        <div style="font-family: Arial, max-width: 600px;">
-          <h2>¡Gracias por contactarnos!</h2>
-          <p>Tu ticket <strong>${ticket.ticketNumber}</strong> ha sido cerrado.</p>
-          <p>Nos gustaría saber tu opinión sobre el servicio recibido.</p>
-          
-          <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3>Ticket: ${ticket.ticketNumber}</h3>
-            <p><strong>Título:</strong> ${ticket.title}</p>
-            <p><strong>Categoría:</strong> ${ticket.category || 'Sin categoría'}</p>
-          </div>
-
-          <h3>Por favor, evalúa tu experiencia:</h3>
-          
-          <div style="margin: 20px 0;">
-            <p><strong>1. ¿Qué tan satisfecho estás con la solución?</strong></p>
-            <p>Del 1 (muy insatisfecho) al 5 (muy satisfecho)</p>
-          </div>
-
-          <div style="margin: 20px 0;">
-            <p><strong>2. ¿Qué tan bien resolvió el agente tu problema?</strong></p>
-            <p>Del 1 al 5</p>
-          </div>
-
-          <div style="margin: 20px 0;">
-            <p><strong>3. ¿Qué tan satisfecho estás con el tiempo de respuesta?</strong></p>
-            <p>Del 1 al 5</p>
-          </div>
-
-          <p>Responde a este email con tus respuestas del 1 al 5.</p>
-          <p>También puedes escribirnos tus comentarios adicionales.</p>
-        </div>
-      `,
+      html: EMAIL_TEMPLATES.satisfactionSurvey({
+        ticketNumber: ticket.ticketNumber,
+        title: ticket.title,
+        category: ticket.category,
+      }),
     });
   }
 
   // === Responder encuesta ===
-  async submitSurvey(id: string, data: {
-    satisfactionRating?: number;
-    technicalRating?: number;
-    responseTimeRating?: number;
-    surveyComment?: string;
-  }): Promise<Ticket> {
+  async submitSurvey(id: string, dto: SurveyResponseDto): Promise<Ticket> {
     await this.ticketRepository.update(id, {
-      ...data,
+      ...dto,
       surveyAnsweredAt: new Date(),
-    } as any);
+    });
 
     return this.findOne(id);
   }
 
   // === Métricas de satisfacción ===
-  async getSatisfactionMetrics(): Promise<any> {
+  async getSatisfactionMetrics(): Promise<{
+    totalSent: number;
+    totalAnswered: number;
+    responseRate: string;
+    notAnswered: number;
+    averages: { satisfaction: string; technical: string; responseTime: string; overall: string };
+    distribution: Array<{ rating: number; count: number }>;
+  }> {
     const ticketsWithSurvey = await this.ticketRepository.find({
       where: { surveySent: true },
     });
@@ -125,20 +136,18 @@ export class TicketsService {
     const answered = ticketsWithSurvey.filter(t => t.surveyAnsweredAt !== null);
     const notAnswered = ticketsWithSurvey.filter(t => !t.surveyAnsweredAt);
 
-    // Calcular promedios
-    const avgSatisfaction = answered.length > 0
-      ? answered.reduce((sum, t) => sum + (t.satisfactionRating || 0), 0) / answered.length
-      : 0;
+    // Calcular promedio
+    const avg = (arr: Ticket[], field: keyof Ticket): number => {
+      if (arr.length === 0) return 0;
+      const sum = arr.reduce((acc, t) => acc + (Number(t[field]) || 0), 0);
+      return sum / arr.length;
+    };
 
-    const avgTechnical = answered.length > 0
-      ? answered.reduce((sum, t) => sum + (t.technicalRating || 0), 0) / answered.length
-      : 0;
+    const avgSatisfaction = avg(answered, 'satisfactionRating');
+    const avgTechnical = avg(answered, 'technicalRating');
+    const avgResponseTime = avg(answered, 'responseTimeRating');
 
-    const avgResponseTime = answered.length > 0
-      ? answered.reduce((sum, t) => sum + (t.responseTimeRating || 0), 0) / answered.length
-      : 0;
-
-    // Distribución de ratings
+    // Distribución
     const distribution = [1, 2, 3, 4, 5].map(rating => ({
       rating,
       count: answered.filter(t => t.satisfactionRating === rating).length,
@@ -147,9 +156,9 @@ export class TicketsService {
     return {
       totalSent: ticketsWithSurvey.length,
       totalAnswered: answered.length,
-      responseRate: ticketsWithSurvey.length > 0 
-        ? ((answered.length / ticketsWithSurvey.length) * 100).toFixed(1) 
-        : 0,
+      responseRate: ticketsWithSurvey.length > 0
+        ? ((answered.length / ticketsWithSurvey.length) * 100).toFixed(1)
+        : '0',
       notAnswered: notAnswered.length,
       averages: {
         satisfaction: avgSatisfaction.toFixed(1),
@@ -169,27 +178,17 @@ export class TicketsService {
       approverEmail,
       approvalRequestedBy: requestedBy,
       approvalRequestedAt: new Date(),
-    } as any);
+    });
 
     const ticket = await this.findOne(id);
     
-    // Enviar email al aprobador
     await this.emailService.sendEmail({
       to: approverEmail,
       subject: `📋 Solicitud de Aprobación - Ticket ${ticket.ticketNumber}`,
-      html: `
-        <div style="font-family: Arial, max-width: 600px;">
-          <h2>Solicitud de Aprobación</h2>
-          <p>Se ha solicitado tu aprobación para el ticket:</p>
-          <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p><strong>Ticket:</strong> ${ticket.ticketNumber}</p>
-            <p><strong>Título:</strong> ${ticket.title}</p>
-            <p><strong>Solicitado por:</strong> ${requestedBy}</p>
-            <p><strong>Descripción:</strong> ${ticket.description}</p>
-          </div>
-          <p>Para aprobar o rechazar, responde a este email o accede al sistema.</p>
-        </div>
-      `,
+      html: EMAIL_TEMPLATES.approvalRequest(
+        { ticketNumber: ticket.ticketNumber, title: ticket.title, description: ticket.description },
+        requestedBy,
+      ),
     });
 
     return ticket;
@@ -200,31 +199,24 @@ export class TicketsService {
       approved,
       approvalComment: comment,
       approvalRespondedAt: new Date(),
-    } as any);
+    });
 
     const ticket = await this.findOne(id);
 
-    // Notificar al solicitante
     if (ticket.approvalRequestedBy) {
       await this.emailService.sendEmail({
         to: ticket.approvalRequestedBy,
         subject: `Tu solicitud de aprobación ha sido ${approved ? 'aprobada' : 'rechazada'}`,
-        html: `
-          <div style="font-family: Arial, max-width: 600px;">
-            <h2>${approved ? '✅ Aprobado' : '❌ Rechazado'}</h2>
-            <p>Tu solicitud de aprobación para el ticket ${ticket.ticketNumber} ha sido ${approved ? 'aprobada' : 'rechazada'}.</p>
-            ${comment ? `<p><strong>Comentario:</strong> ${comment}</p>` : ''}
-          </div>
-        `,
+        html: EMAIL_TEMPLATES.approvalResponse(ticket.ticketNumber, approved, comment),
       });
     }
 
     return ticket;
   }
 
-  async getApprovalsStats(): Promise<any> {
+  async getApprovalsStats(): Promise<{ total: number; pending: number; approved: number; rejected: number }> {
     const all = await this.ticketRepository.find({ 
-      where: { approvalRequired: true } 
+      where: { approvalRequired: true },
     });
     
     const pending = all.filter(t => !t.approved && t.approvalRespondedAt === null).length;
@@ -232,5 +224,35 @@ export class TicketsService {
     const rejected = all.filter(t => t.approvalRequired && t.approved === false && t.approvalRespondedAt !== null).length;
 
     return { total: all.length, pending, approved, rejected };
+  }
+
+  // === Calcular tiempos para SLA ===
+  calculateSlaTimes(ticket: Ticket): { totalTime: number; responseTime: number; resolutionTime: number; waitTime: number } {
+    const defaultResult = { totalTime: 0, responseTime: 0, resolutionTime: 0, waitTime: 0 };
+
+    if (!ticket.assignedAt) return defaultResult;
+
+    const toMinutes = (date: Date): number => Math.floor(date.getTime() / 60000);
+    const now = toMinutes(ticket.closedAt || ticket.resolvedAt || new Date());
+    const assigned = toMinutes(new Date(ticket.assignedAt));
+
+    const result = { ...defaultResult };
+    result.totalTime = now - assigned;
+
+    // Tiempo de espera (asignado → atendiendo)
+    if (ticket.attendingAt) {
+      const attending = toMinutes(new Date(ticket.attendingAt));
+      result.waitTime = attending - assigned;
+      result.responseTime = result.waitTime;
+    }
+
+    // Tiempo de resolución (atendiendo → resuelto)
+    if (ticket.attendingAt && ticket.resolvedAt) {
+      const resolved = toMinutes(new Date(ticket.resolvedAt));
+      const attending = toMinutes(new Date(ticket.attendingAt));
+      result.resolutionTime = resolved - attending;
+    }
+
+    return result;
   }
 }

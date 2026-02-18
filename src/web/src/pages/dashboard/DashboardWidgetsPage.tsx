@@ -172,7 +172,7 @@ export function DashboardWidgetsPage() {
 
       {/* Modal */}
       {showModal && (
-        <Modal onClose={() => setShowModal(false)} title="Agregar Widget">
+        <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Agregar Widget">
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Tipo de Widget</label>

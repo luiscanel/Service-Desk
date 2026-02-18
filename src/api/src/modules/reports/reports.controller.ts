@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { ReportsService } from './reports.service';
+import { CreateScheduledReportDto, UpdateScheduledReportDto } from './dto/report.dto';
 
 @ApiTags('Reports')
 @Controller('api/reports')
@@ -15,20 +16,14 @@ export class ReportsController {
 
   @Post('scheduled')
   @ApiOperation({ summary: 'Create scheduled report' })
-  async create(@Body() data: {
-    name: string;
-    reportType: string;
-    frequency: string;
-    recipients: string;
-    filters?: any;
-  }) {
-    return this.reportsService.create(data);
+  async create(@Body() dto: CreateScheduledReportDto) {
+    return this.reportsService.create(dto);
   }
 
   @Put('scheduled/:id')
   @ApiOperation({ summary: 'Update scheduled report' })
-  async update(@Param('id') id: string, @Body() data: Partial<any>) {
-    return this.reportsService.update(id, data);
+  async update(@Param('id') id: string, @Body() dto: UpdateScheduledReportDto) {
+    return this.reportsService.update(id, dto);
   }
 
   @Delete('scheduled/:id')
