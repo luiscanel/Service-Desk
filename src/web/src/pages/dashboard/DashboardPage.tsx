@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import { ticketsService, authService } from '../../services/api';
 import { Card, CardHeader, CardBody, Button, StatCard } from '../../components/ui';
 
@@ -33,19 +33,24 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [satisfaction, setSatisfaction] = useState<any>(null);
 
   const user = authService.getCurrentUser();
 
   useEffect(() => {
-    loadTickets();
+    loadData();
   }, []);
 
-  const loadTickets = async () => {
+  const loadData = async () => {
     try {
-      const response = await ticketsService.getAll();
-      setTickets(response.data);
+      const [ticketsRes, satRes] = await Promise.all([
+        ticketsService.getAll(),
+        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/tickets/stats/satisfaction`).then(r => r.json()).catch(() => null)
+      ]);
+      setTickets(ticketsRes.data);
+      setSatisfaction(satRes);
     } catch (error) {
-      console.error('Error loading tickets:', error);
+      console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
@@ -147,6 +152,88 @@ export function DashboardPage() {
           </CardBody>
         </Card>
       </div>
+
+      {/* Satisfaction Metrics */}
+      {satisfaction && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold text-slate-800">📊 Satisfacción del Cliente</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardBody className="text-center">
+                <div className="text-3xl font-bold text-blue-600">{satisfaction.averages?.overall || '0'}</div>
+                <div className="text-sm text-slate-500">Puntuación Promedio</div>
+                <div className="text-xs text-slate-400">sobre 5</div>
+              </CardBody>
+            </Card>
+            <Card>
+              <CardBody className="text-center">
+                <div className="text-3xl font-bold text-green-600">{satisfaction.totalAnswered || 0}</div>
+                <div className="text-sm text-slate-500">Encuestas Respondidas</div>
+              </CardBody>
+            </Card>
+            <Card>
+              <CardBody className="text-center">
+                <div className="text-3xl font-bold text-amber-600">{satisfaction.responseRate || 0}%</div>
+                <div className="text-sm text-slate-500">Tasa de Respuesta</div>
+              </CardBody>
+            </Card>
+            <Card>
+              <CardBody className="text-center">
+                <div className="text-3xl font-bold text-purple-600">{satisfaction.notAnswered || 0}</div>
+                <div className="text-sm text-slate-500">Pendientes</div>
+              </CardBody>
+            </Card>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader>
+                <h3 className="font-semibold text-slate-800">Satisfacción General</h3>
+              </CardHeader>
+              <CardBody>
+                <div className="text-4xl font-bold text-center text-blue-600">{satisfaction.averages?.satisfaction || '0'}</div>
+                <div className="text-center text-slate-500">sobre 5</div>
+              </CardBody>
+            </Card>
+            <Card>
+              <CardHeader>
+                <h3 className="font-semibold text-slate-800">Evaluación Técnica</h3>
+              </CardHeader>
+              <CardBody>
+                <div className="text-4xl font-bold text-center text-green-600">{satisfaction.averages?.technical || '0'}</div>
+                <div className="text-center text-slate-500">sobre 5</div>
+              </CardBody>
+            </Card>
+            <Card>
+              <CardHeader>
+                <h3 className="font-semibold text-slate-800">Tiempo de Respuesta</h3>
+              </CardHeader>
+              <CardBody>
+                <div className="text-4xl font-bold text-center text-amber-600">{satisfaction.averages?.responseTime || '0'}</div>
+                <div className="text-center text-slate-500">sobre 5</div>
+              </CardBody>
+            </Card>
+          </div>
+
+          {/* Distribution Chart */}
+          <Card>
+            <CardHeader>
+              <h3 className="font-semibold text-slate-800">Distribución de Ratings</h3>
+            </CardHeader>
+            <CardBody>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={satisfaction.distribution || []}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                  <XAxis dataKey="rating" stroke="#64748B" fontSize={12} />
+                  <YAxis stroke="#64748B" fontSize={12} />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardBody>
+          </Card>
+        </div>
+      )}
 
       {/* Recent Tickets */}
       <Card>
