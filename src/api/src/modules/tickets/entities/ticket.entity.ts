@@ -73,6 +73,21 @@ export class Ticket {
   @Column({ default: false })
   approved: boolean
 
+  @Column({ nullable: true })
+  approverEmail: string
+
+  @Column({ nullable: true })
+  approvalComment: string
+
+  @Column({ nullable: true })
+  approvalRequestedBy: string
+
+  @Column({ type: 'timestamp', nullable: true })
+  approvalRequestedAt: Date
+
+  @Column({ type: 'timestamp', nullable: true })
+  approvalRespondedAt: Date
+
   @Column({ type: 'jsonb', nullable: true })
   attachments: any[]
 

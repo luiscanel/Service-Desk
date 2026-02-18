@@ -13,7 +13,6 @@ import { SlaPoliciesPage } from './pages/sla/SlaPoliciesPage';
 import { AuditLogsPage } from './pages/audit/AuditLogsPage';
 import { SurveysPage } from './pages/surveys/SurveysPage';
 import { PortalClientsPage } from './pages/portal/PortalClientsPage';
-import { ApprovalsPage } from './pages/approvals/ApprovalsPage';
 import { ScheduledReportsPage } from './pages/reports/ScheduledReportsPage';
 import { DashboardWidgetsPage } from './pages/dashboard/DashboardWidgetsPage';
 import { KnowledgeCategoriesPage } from './pages/knowledge-categories/KnowledgeCategoriesPage';
@@ -52,7 +51,6 @@ function App() {
             <Route path="audit" element={<AuditLogsPage />} />
             <Route path="surveys" element={<SurveysPage />} />
             <Route path="portal" element={<PortalClientsPage />} />
-            <Route path="approvals" element={<ApprovalsPage />} />
             <Route path="scheduled-reports" element={<ScheduledReportsPage />} />
             <Route path="dashboard-widgets" element={<DashboardWidgetsPage />} />
             <Route path="knowledge-categories" element={<KnowledgeCategoriesPage />} />
