@@ -10,6 +10,8 @@ import { ReportsPage } from './pages/reports/ReportsPage';
 import { SettingsPage } from './pages/settings/SettingsPage';
 import { MacrosPage } from './pages/macros/MacrosPage';
 import { SlaPoliciesPage } from './pages/sla/SlaPoliciesPage';
+import { SlaMonitorPage } from './pages/sla-monitor/SlaMonitorPage';
+import { GamificationPage } from './pages/gamification/GamificationPage';
 import { AuditLogsPage } from './pages/audit/AuditLogsPage';
 import { ScheduledReportsPage } from './pages/reports/ScheduledReportsPage';
 import { WebSocketProvider } from './services/websocket';
@@ -42,6 +44,8 @@ function App() {
             <Route path="reports" element={<ReportsPage />} />
             <Route path="macros" element={<MacrosPage />} />
             <Route path="sla" element={<SlaPoliciesPage />} />
+            <Route path="sla-monitor" element={<SlaMonitorPage />} />
+            <Route path="gamification" element={<GamificationPage />} />
             <Route path="audit" element={<AuditLogsPage />} />
             <Route path="scheduled-reports" element={<ScheduledReportsPage />} />
             <Route path="settings" element={<SettingsPage />} />

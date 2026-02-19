@@ -15,6 +15,8 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { AttachmentsModule } from './modules/attachments/attachments.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { ReportsModule } from './modules/reports/reports.module';
+import { KnowledgeModule } from './modules/knowledge/knowledge.module';
+import { GamificationModule } from './modules/gamification/gamification.module';
 import { Ticket } from './modules/tickets/entities/ticket.entity';
 import { User } from './modules/users/entities/user.entity';
 import { Agent } from './modules/agents/entities/agent.entity';
@@ -23,6 +25,8 @@ import { Macro } from './modules/macros/entities/macro.entity';
 import { SlaPolicy } from './modules/sla/entities/sla-policy.entity';
 import { AuditLog } from './modules/audit/entities/audit-log.entity';
 import { ScheduledReport } from './modules/reports/entities/scheduled-report.entity';
+import { KnowledgeArticle } from './modules/knowledge/entities/knowledge-article.entity';
+import { AgentStats, Achievement, AchievementUnlock } from './modules/gamification/entities/gamification.entity';
 
 @Module({
   imports: [
@@ -34,8 +38,9 @@ import { ScheduledReport } from './modules/reports/entities/scheduled-report.ent
       username: 'servicedesk',
       password: 'ChangeMe123',
       database: 'servicedesk',
-      entities: [Ticket, User, Agent, Setting, Macro, SlaPolicy, AuditLog, ScheduledReport],
-      synchronize: true,
+      entities: [Ticket, User, Agent, Setting, Macro, SlaPolicy, AuditLog, ScheduledReport, KnowledgeArticle, AgentStats, Achievement, AchievementUnlock],
+      synchronize: false,
+      migrationsRun: true,
     }),
     TicketsModule,
     AgentsModule,
@@ -51,6 +56,8 @@ import { ScheduledReport } from './modules/reports/entities/scheduled-report.ent
     AttachmentsModule,
     DashboardModule,
     ReportsModule,
+    KnowledgeModule,
+    GamificationModule,
   ],
 })
 export class AppModule {}

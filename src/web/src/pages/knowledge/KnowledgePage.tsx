@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardBody, Button, Input, Modal, Badge } from '../../components/ui';
+import { knowledgeService } from '../../services/api';
 
 interface Article {
   id: string;
@@ -13,44 +14,18 @@ interface Article {
   updatedAt: string;
 }
 
-const mockArticles: Article[] = [
-  {
-    id: '1',
-    title: 'Cómo reiniciar el router WiFi',
-    content: 'Para reiniciar el router WiFi, sigue estos pasos: 1. Desconecta el cable de alimentación, 2. Espera 30 segundos, 3. Vuelve a conectar. El router se reiniciará automáticamente.',
-    category: 'Redes',
-    tags: ['wifi', 'red', 'conexión'],
-    author: 'Administrador',
-    views: 145,
-    createdAt: '2026-01-15',
-    updatedAt: '2026-02-10',
-  },
-  {
-    id: '2',
-    title: 'Instalar Office 365',
-    content: 'Para instalar Office 365: 1. Ve a office.com, 2. Inicia sesión con tu cuenta corporativa, 3. Haz clic en "Instalar Office", 4. Ejecuta el instalador.',
-    category: 'Software',
-    tags: ['office', 'microsoft', 'instalación'],
-    author: 'Administrador',
-    views: 89,
-    createdAt: '2026-01-20',
-    updatedAt: '2026-02-05',
-  },
-  {
-    id: '3',
-    title: 'Crear cuenta de usuario en Windows',
-    content: 'Para crear una cuenta de usuario: 1. Abre Configuración, 2. Cuentas, 3. Familia y otros usuarios, 4. Agregar alguien más a esta PC.',
-    category: 'Sistemas',
-    tags: ['windows', 'usuario', 'cuenta'],
-    author: 'Administrador',
-    views: 67,
-    createdAt: '2026-02-01',
-    updatedAt: '2026-02-01',
-  },
-];
+interface Stats {
+  total: number;
+  totalViews: number;
+  categories: number;
+  tags: number;
+}
 
 export function KnowledgePage() {
-  const [articles] = useState<Article[]>(mockArticles);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [stats, setStats] = useState<Stats>({ total: 0, totalViews: 0, categories: 0, tags: 0 });
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
@@ -62,22 +37,93 @@ export function KnowledgePage() {
     tags: '',
   });
 
-  const categories = ['all', 'Redes', 'Software', 'Sistemas', 'Seguridad', 'Hardware'];
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [articlesRes, statsRes, categoriesRes] = await Promise.all([
+        knowledgeService.getAll({ search: searchTerm, category: selectedCategory, limit: 100 }),
+        knowledgeService.getStats(),
+        knowledgeService.getCategories(),
+      ]);
+      setArticles(articlesRes.data.articles || articlesRes.data);
+      setStats(statsRes.data);
+      const cats = categoriesRes.data.map((c: any) => c.category);
+      setCategories(['all', ...cats]);
+    } catch (error) {
+      console.error('Error fetching knowledge:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [selectedCategory]);
+
+  useEffect(() => {
+    const delaySearch = setTimeout(() => {
+      fetchData();
+    }, 300);
+    return () => clearTimeout(delaySearch);
+  }, [searchTerm]);
+
+  const handleCreateArticle = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const tagsArray = formData.tags.split(',').map(t => t.trim()).filter(t => t);
+      await knowledgeService.create({
+        ...formData,
+        tags: tagsArray,
+        author: 'Administrador',
+      });
+      setIsModalOpen(false);
+      setFormData({ title: '', content: '', category: 'Software', tags: '' });
+      fetchData();
+    } catch (error) {
+      console.error('Error creating article:', error);
+      alert('Error al crear artículo');
+    }
+  };
+
+  const handleDeleteArticle = async (id: string) => {
+    if (confirm('¿Estás seguro de eliminar este artículo?')) {
+      try {
+        await knowledgeService.delete(id);
+        fetchData();
+        setSelectedArticle(null);
+      } catch (error) {
+        console.error('Error deleting article:', error);
+      }
+    }
+  };
+
+  const handleViewArticle = async (article: Article) => {
+    try {
+      await knowledgeService.incrementViews(article.id);
+      setArticles(articles.map(a => 
+        a.id === article.id ? { ...a, views: a.views + 1 } : a
+      ));
+    } catch (error) {
+      console.error('Error incrementing views:', error);
+    }
+    setSelectedArticle(article);
+  };
 
   const filteredArticles = articles.filter(article => {
-    const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          article.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          article.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesCategory = selectedCategory === 'all' || article.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    const matchesSearch = searchTerm === '' ||
+      article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      article.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (article.tags && article.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase())));
+    return matchesSearch;
   });
 
-  const handleCreateArticle = (e: React.FormEvent) => {
-    e.preventDefault();
-    alert('Artículo creado exitosamente (demo)');
-    setIsModalOpen(false);
-    setFormData({ title: '', content: '', category: 'Software', tags: '' });
-  };
+  if (loading && articles.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-slate-500">Cargando...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -114,27 +160,27 @@ export function KnowledgePage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardBody>
-            <div className="text-2xl font-bold text-slate-800">{articles.length}</div>
+            <div className="text-2xl font-bold text-slate-800">{stats.total}</div>
             <div className="text-sm text-slate-500">Total Artículos</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody>
             <div className="text-2xl font-bold text-slate-800">
-              {articles.reduce((acc, a) => acc + a.views, 0)}
+              {stats.totalViews}
             </div>
             <div className="text-sm text-slate-500">Total Vistas</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody>
-            <div className="text-2xl font-bold text-slate-800">{categories.length - 1}</div>
+            <div className="text-2xl font-bold text-slate-800">{stats.categories}</div>
             <div className="text-sm text-slate-500">Categorías</div>
           </CardBody>
         </Card>
         <Card>
           <CardBody>
-            <div className="text-2xl font-bold text-slate-800">{articles.reduce((acc, a) => acc + a.tags.length, 0)}</div>
+            <div className="text-2xl font-bold text-slate-800">{stats.tags}</div>
             <div className="text-sm text-slate-500">Tags</div>
           </CardBody>
         </Card>
@@ -147,7 +193,7 @@ export function KnowledgePage() {
             key={article.id} 
             hover 
             className="cursor-pointer"
-            onClick={() => setSelectedArticle(article)}
+            onClick={() => handleViewArticle(article)}
           >
             <CardBody>
               <div className="flex items-start justify-between mb-3">
@@ -157,7 +203,7 @@ export function KnowledgePage() {
               <h3 className="font-semibold text-slate-800 mb-2 line-clamp-2">{article.title}</h3>
               <p className="text-sm text-slate-500 line-clamp-3 mb-4">{article.content}</p>
               <div className="flex flex-wrap gap-1">
-                {article.tags.map(tag => (
+                {article.tags && article.tags.map((tag: string) => (
                   <span key={tag} className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-full">
                     #{tag}
                   </span>
@@ -196,14 +242,23 @@ export function KnowledgePage() {
               <p className="text-slate-700 whitespace-pre-wrap">{selectedArticle.content}</p>
             </div>
             <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-100">
-              {selectedArticle.tags.map(tag => (
+              {selectedArticle.tags && selectedArticle.tags.map((tag: string) => (
                 <span key={tag} className="px-3 py-1 bg-slate-100 text-slate-600 text-sm rounded-full">
                   #{tag}
                 </span>
               ))}
             </div>
-            <div className="text-xs text-slate-400">
-              Actualizado: {selectedArticle.updatedAt}
+            <div className="flex justify-between items-center">
+              <div className="text-xs text-slate-400">
+                Actualizado: {selectedArticle.updatedAt}
+              </div>
+              <Button 
+                variant="secondary" 
+                className="text-red-500 hover:text-red-700"
+                onClick={() => handleDeleteArticle(selectedArticle.id)}
+              >
+                Eliminar
+              </Button>
             </div>
           </div>
         )}

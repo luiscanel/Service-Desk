@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Ticket, TicketStatus } from './entities/ticket.entity';
 import { EmailService } from '../email/email.service';
+import { SlaService } from '../sla/sla.service';
+import { AutoAssignmentService } from '../auto-assignment/auto-assignment.service';
 import { EMAIL_TEMPLATES } from '../../common/constants';
 import { CreateTicketDto, UpdateTicketDto, SurveyResponseDto } from './dto/ticket.dto';
 
@@ -12,6 +14,8 @@ export class TicketsService {
     @InjectRepository(Ticket) 
     private readonly ticketRepository: Repository<Ticket>,
     private readonly emailService: EmailService,
+    private readonly slaService: SlaService,
+    private readonly autoAssignmentService: AutoAssignmentService,
   ) {}
 
   async findAll(): Promise<Ticket[]> {
@@ -27,8 +31,36 @@ export class TicketsService {
   }
 
   async create(dto: CreateTicketDto): Promise<Ticket> {
-    const ticket = this.ticketRepository.create(dto);
-    return this.ticketRepository.save(ticket);
+    // Generate ticket number
+    const count = await this.ticketRepository.count();
+    const year = new Date().getFullYear();
+    const ticketNumber = `TKT-${year}-${String(count + 1).padStart(4, '0')}`;
+    
+    const ticket = this.ticketRepository.create({
+      ...dto,
+      ticketNumber,
+    });
+    
+    // Calculate SLA deadline based on priority
+    const slaDeadline = await this.slaService.applySlaToTicket(ticket);
+    if (slaDeadline) {
+      ticket.slaDeadline = slaDeadline;
+    }
+    
+    const savedTicket = await this.ticketRepository.save(ticket);
+    
+    // Auto-assign ticket if no agent is assigned
+    if (!savedTicket.assignedToId) {
+      const assignedAgent = await this.autoAssignmentService.assignTicket(savedTicket);
+      if (assignedAgent) {
+        savedTicket.assignedToId = assignedAgent.id;
+        savedTicket.status = TicketStatus.ASSIGNED;
+        savedTicket.assignedAt = new Date();
+        await this.ticketRepository.save(savedTicket);
+      }
+    }
+    
+    return savedTicket;
   }
 
   async update(id: string, dto: UpdateTicketDto): Promise<Ticket> {

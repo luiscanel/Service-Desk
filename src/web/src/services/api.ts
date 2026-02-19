@@ -74,4 +74,16 @@ export const settingsService = {
   sendTestEmail: (to: string) => api.post('/settings/email/test', { to }).then(res => res.data),
 };
 
+export const knowledgeService = {
+  getAll: (params?: { search?: string; category?: string; page?: number; limit?: number }) => 
+    api.get('/knowledge', { params }),
+  getById: (id: string) => api.get(`/knowledge/${id}`),
+  create: (data: any) => api.post('/knowledge', data),
+  update: (id: string, data: any) => api.put(`/knowledge/${id}`, data),
+  delete: (id: string) => api.delete(`/knowledge/${id}`),
+  getStats: () => api.get('/knowledge/stats'),
+  getCategories: () => api.get('/knowledge/categories'),
+  incrementViews: (id: string) => api.post(`/knowledge/${id}/views`),
+};
+
 export default api;

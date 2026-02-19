@@ -1,4 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, In } from 'typeorm';
+import { Agent } from '../agents/entities/agent.entity';
+import { Ticket, TicketStatus } from '../tickets/entities/ticket.entity';
 
 export interface AgentScore {
   agentId: string;
@@ -11,6 +15,13 @@ export interface AgentScore {
 @Injectable()
 export class AutoAssignmentService {
   private readonly logger = new Logger(AutoAssignmentService.name);
+
+  constructor(
+    @InjectRepository(Agent)
+    private agentRepository: Repository<Agent>,
+    @InjectRepository(Ticket)
+    private ticketRepository: Repository<Ticket>,
+  ) {}
 
   private weights = {
     skillsMatch: 0.30,
@@ -57,5 +68,39 @@ export class AutoAssignmentService {
   private calculateWorkloadScore(currentTickets: number): number {
     const maxTickets = 10;
     return Math.max(0, 1 - (currentTickets / maxTickets));
+  }
+
+  async assignTicket(ticket: Ticket): Promise<Agent | null> {
+    const agents = await this.agentRepository.find({ 
+      where: { isAvailable: true }
+    });
+
+    if (agents.length === 0) {
+      this.logger.warn('No hay agentes disponibles para asignar');
+      return null;
+    }
+
+    // Get current ticket count for each agent
+    for (const agent of agents) {
+      const ticketCount = await this.ticketRepository
+        .createQueryBuilder('ticket')
+        .where('ticket.assignedToId = :agentId', { agentId: agent.id })
+        .andWhere('ticket.status NOT IN (:...statuses)', { statuses: [TicketStatus.CLOSED, TicketStatus.RESOLVED] })
+        .getCount();
+      
+      agent.currentTickets = ticketCount;
+    }
+
+    const bestAgentId = await this.findBestAgent(ticket.category || '', agents);
+    
+    if (!bestAgentId) {
+      this.logger.warn('No se encontró el mejor agente para el ticket');
+      return null;
+    }
+
+    const selectedAgent = agents.find(a => a.id === bestAgentId);
+    this.logger.log(`Ticket ${ticket.id} asignado al agente ${selectedAgent?.id}`);
+    
+    return selectedAgent || null;
   }
 }
