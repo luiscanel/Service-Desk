@@ -71,37 +71,60 @@ const menuItems = [
 
 export function Sidebar() {
   return (
-    <aside className="w-64 bg-gradient-to-b from-slate-800 to-slate-900 text-white min-h-screen flex flex-col">
-      <div className="p-6 border-b border-slate-700/50">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-xl">
+    <aside className="w-72 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white min-h-screen flex flex-col relative overflow-hidden">
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-0 -left-40 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 -right-40 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+      </div>
+      
+      <div className="relative z-10 p-6 border-b border-slate-700/50">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-blue-500/30 animate-float">
             🎫
           </div>
           <div>
-            <div className="font-bold text-lg">Teknao</div>
-            <div className="text-xs text-slate-400">Service Desk</div>
+            <div className="font-bold text-xl tracking-tight">Teknao</div>
+            <div className="text-xs text-blue-400 font-medium">Service Desk</div>
           </div>
         </div>
       </div>
       
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="relative z-10 flex-1 p-4 space-y-1 overflow-y-auto">
         {menuItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+              `flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 group relative overflow-hidden ${
                 isActive 
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-600/25' 
-                  : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
+                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-600/30' 
+                  : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'
               }`
             }
           >
-            {item.icon}
-            <span className="font-medium">{item.label}</span>
+            <span className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+            <span className="transition-transform duration-300 group-hover:scale-110">
+              {item.icon}
+            </span>
+            <span className="font-medium relative z-10">{item.label}</span>
+            <span className="ml-auto opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 text-xs">
+              →
+            </span>
           </NavLink>
         ))}
       </nav>
+
+      <div className="relative z-10 p-4 border-t border-slate-700/50">
+        <div className="flex items-center gap-3 px-4 py-3 bg-slate-800/50 rounded-xl">
+          <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-xs font-bold">
+            v2
+          </div>
+          <div className="text-xs text-slate-400">
+            <div className="text-slate-300 font-medium">Service Desk</div>
+            <div>Enterprise Edition</div>
+          </div>
+        </div>
+      </div>
     </aside>
   );
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from 'recharts';
 import { ticketsService, authService } from '../../services/api';
 import { Card, CardHeader, CardBody, Button, StatCard } from '../../components/ui';
 
@@ -10,14 +10,6 @@ const ticketsByStatus = [
   { name: 'Cerrados', value: 89, color: '#10B981' },
   { name: 'Pendientes', value: 12, color: '#EF4444' },
 ];
-
-// const ticketsByCategory = [
-//   { name: 'Redes', count: 34 },
-//   { name: 'Sistemas', count: 28 },
-//   { name: 'Seguridad', count: 19 },
-//   { name: 'Hardware', count: 45 },
-//   { name: 'Software', count: 23 },
-// ];
 
 const weeklyData = [
   { day: 'Lun', tickets: 12 },
@@ -58,176 +50,215 @@ export function DashboardPage() {
 
   const openTickets = tickets.filter(t => t.status === 'new' || t.status === 'in_progress').length;
   const closedTickets = tickets.filter(t => t.status === 'closed' || t.status === 'resolved').length;
+  const pendingTickets = tickets.filter(t => t.status === 'pending').length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
-          <p className="text-slate-500">Bienvenido de nuevo, {user?.firstName || 'Usuario'}</p>
+        <div className="animate-fade-in-up">
+          <h1 className="text-3xl font-bold text-slate-800">Dashboard</h1>
+          <p className="text-slate-500 mt-1">Bienvenido de nuevo, <span className="font-semibold text-blue-600">{user?.firstName || 'Usuario'}</span></p>
         </div>
-        <Button onClick={() => navigate('/tickets')}>
-          + Nuevo Ticket
+        <Button onClick={() => navigate('/tickets')} className="animate-fade-in-up delay-100">
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Nuevo Ticket
         </Button>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="Total Tickets"
-          value={loading ? '...' : tickets.length}
-          icon="🎫"
-          color="blue"
-        />
-        <StatCard
-          title="Abiertos"
-          value={loading ? '...' : openTickets}
-          icon="📂"
-          color="amber"
-        />
-        <StatCard
-          title="En Progreso"
-          value={loading ? '...' : tickets.filter(t => t.status === 'in_progress').length}
-          icon="⏳"
-          color="purple"
-        />
-        <StatCard
-          title="Cerrados Hoy"
-          value={loading ? '...' : closedTickets}
-          icon="✅"
-          color="green"
-        />
+        <div className="animate-fade-in-up delay-100">
+          <StatCard
+            title="Total Tickets"
+            value={loading ? '...' : tickets.length}
+            icon="🎫"
+            color="blue"
+          />
+        </div>
+        <div className="animate-fade-in-up delay-200">
+          <StatCard
+            title="Abiertos"
+            value={loading ? '...' : openTickets}
+            icon="📂"
+            color="purple"
+          />
+        </div>
+        <div className="animate-fade-in-up delay-300">
+          <StatCard
+            title="Pendientes"
+            value={loading ? '...' : pendingTickets}
+            icon="⏳"
+            color="amber"
+          />
+        </div>
+        <div className="animate-fade-in-up delay-400">
+          <StatCard
+            title="Cerrados"
+            value={loading ? '...' : closedTickets}
+            icon="✅"
+            color="green"
+          />
+        </div>
       </div>
 
-      {/* Charts */}
+      {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <h2 className="text-lg font-semibold text-slate-800">Tickets por Estado</h2>
-          </CardHeader>
-          <CardBody>
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={ticketsByStatus}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {ticketsByStatus.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+        {/* Pie Chart */}
+        <div className="animate-fade-in-up delay-200">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-slate-800">Tickets por Estado</h2>
+                <div className="flex gap-2">
+                  {ticketsByStatus.map((item) => (
+                    <div key={item.name} className="flex items-center gap-1.5">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }}></div>
+                      <span className="text-xs text-slate-500">{item.name}</span>
+                    </div>
                   ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="flex flex-wrap gap-4 justify-center mt-4">
-              {ticketsByStatus.map((item) => (
-                <div key={item.name} className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
-                  <span className="text-sm text-slate-600">{item.name}</span>
                 </div>
-              ))}
-            </div>
-          </CardBody>
-        </Card>
+              </div>
+            </CardHeader>
+            <CardBody>
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie
+                    data={ticketsByStatus}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={70}
+                    outerRadius={100}
+                    paddingAngle={8}
+                    dataKey="value"
+                  >
+                    {ticketsByStatus.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} strokeWidth={0} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'white', 
+                      border: 'none', 
+                      borderRadius: '12px',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              {/* Center text */}
+              <div className="text-center -mt-16 relative z-10">
+                <div className="text-3xl font-bold text-slate-800">{tickets.length}</div>
+                <div className="text-sm text-slate-500">Total</div>
+              </div>
+            </CardBody>
+          </Card>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <h2 className="text-lg font-semibold text-slate-800">Tickets esta Semana</h2>
-          </CardHeader>
-          <CardBody>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={weeklyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                <XAxis dataKey="day" stroke="#64748B" fontSize={12} />
-                <YAxis stroke="#64748B" fontSize={12} />
-                <Tooltip />
-                <Line type="monotone" dataKey="tickets" stroke="#3B82F6" strokeWidth={3} dot={{ fill: '#3B82F6' }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardBody>
-        </Card>
+        {/* Line Chart */}
+        <div className="animate-fade-in-up delay-300">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-slate-800">Tickets esta Semana</h2>
+                <span className="text-xs text-slate-500 bg-slate-100 px-3 py-1 rounded-full">Esta semana</span>
+              </div>
+            </CardHeader>
+            <CardBody>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={weeklyData}>
+                  <defs>
+                    <linearGradient id="colorTickets" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
+                  <XAxis dataKey="day" stroke="#64748B" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#64748B" fontSize={12} tickLine={false} axisLine={false} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'white', 
+                      border: 'none', 
+                      borderRadius: '12px',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                    }}
+                  />
+                  <Area type="monotone" dataKey="tickets" stroke="#3B82F6" strokeWidth={3} fill="url(#colorTickets)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardBody>
+          </Card>
+        </div>
       </div>
 
       {/* Satisfaction Metrics */}
       {satisfaction && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold text-slate-800">📊 Satisfacción del Cliente</h2>
+        <div className="space-y-6 animate-fade-in-up delay-400">
+          <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+            <span>📊</span> Satisfacción del Cliente
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card>
-              <CardBody className="text-center">
-                <div className="text-3xl font-bold text-blue-600">{satisfaction.averages?.overall || '0'}</div>
-                <div className="text-sm text-slate-500">Puntuación Promedio</div>
-                <div className="text-xs text-slate-400">sobre 5</div>
+            <Card hover>
+              <CardBody className="text-center py-6">
+                <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-blue-500/30">
+                  {satisfaction.averages?.overall || '0'}
+                </div>
+                <div className="text-lg font-bold text-slate-800">Puntuación</div>
+                <div className="text-sm text-slate-500">sobre 5</div>
               </CardBody>
             </Card>
-            <Card>
-              <CardBody className="text-center">
-                <div className="text-3xl font-bold text-green-600">{satisfaction.totalAnswered || 0}</div>
-                <div className="text-sm text-slate-500">Encuestas Respondidas</div>
+            <Card hover>
+              <CardBody className="text-center py-6">
+                <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-green-500/30">
+                  {satisfaction.totalAnswered || 0}
+                </div>
+                <div className="text-lg font-bold text-slate-800">Respondidas</div>
+                <div className="text-sm text-slate-500">Encuestas</div>
               </CardBody>
             </Card>
-            <Card>
-              <CardBody className="text-center">
-                <div className="text-3xl font-bold text-amber-600">{satisfaction.responseRate || 0}%</div>
-                <div className="text-sm text-slate-500">Tasa de Respuesta</div>
+            <Card hover>
+              <CardBody className="text-center py-6">
+                <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-amber-500/30">
+                  {satisfaction.responseRate || 0}%
+                </div>
+                <div className="text-lg font-bold text-slate-800">Tasa</div>
+                <div className="text-sm text-slate-500">de Respuesta</div>
               </CardBody>
             </Card>
-            <Card>
-              <CardBody className="text-center">
-                <div className="text-3xl font-bold text-purple-600">{satisfaction.notAnswered || 0}</div>
-                <div className="text-sm text-slate-500">Pendientes</div>
+            <Card hover>
+              <CardBody className="text-center py-6">
+                <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-purple-500/30">
+                  {satisfaction.notAnswered || 0}
+                </div>
+                <div className="text-lg font-bold text-slate-800">Pendientes</div>
+                <div className="text-sm text-slate-500">Sin responder</div>
               </CardBody>
             </Card>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
-              <CardHeader>
-                <h3 className="font-semibold text-slate-800">Satisfacción General</h3>
-              </CardHeader>
-              <CardBody>
-                <div className="text-4xl font-bold text-center text-blue-600">{satisfaction.averages?.satisfaction || '0'}</div>
-                <div className="text-center text-slate-500">sobre 5</div>
-              </CardBody>
-            </Card>
-            <Card>
-              <CardHeader>
-                <h3 className="font-semibold text-slate-800">Evaluación Técnica</h3>
-              </CardHeader>
-              <CardBody>
-                <div className="text-4xl font-bold text-center text-green-600">{satisfaction.averages?.technical || '0'}</div>
-                <div className="text-center text-slate-500">sobre 5</div>
-              </CardBody>
-            </Card>
-            <Card>
-              <CardHeader>
-                <h3 className="font-semibold text-slate-800">Tiempo de Respuesta</h3>
-              </CardHeader>
-              <CardBody>
-                <div className="text-4xl font-bold text-center text-amber-600">{satisfaction.averages?.responseTime || '0'}</div>
-                <div className="text-center text-slate-500">sobre 5</div>
-              </CardBody>
-            </Card>
-          </div>
-
           {/* Distribution Chart */}
           <Card>
             <CardHeader>
-              <h3 className="font-semibold text-slate-800">Distribución de Ratings</h3>
+              <h3 className="font-bold text-slate-800">Distribución de Ratings</h3>
             </CardHeader>
             <CardBody>
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={satisfaction.distribution || []}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                  <XAxis dataKey="rating" stroke="#64748B" fontSize={12} />
-                  <YAxis stroke="#64748B" fontSize={12} />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
+                  <XAxis dataKey="rating" stroke="#64748B" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#64748B" fontSize={12} tickLine={false} axisLine={false} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'white', 
+                      border: 'none', 
+                      borderRadius: '12px',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                    }}
+                  />
+                  <Bar dataKey="count" fill="#3B82F6" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardBody>
@@ -236,9 +267,9 @@ export function DashboardPage() {
       )}
 
       {/* Recent Tickets */}
-      <Card>
+      <Card className="animate-fade-in-up delay-500">
         <CardHeader className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-800">Tickets Recientes</h2>
+          <h2 className="text-lg font-bold text-slate-800">Tickets Recientes</h2>
           <Button variant="secondary" size="sm" onClick={() => navigate('/tickets')}>
             Ver todos
           </Button>
@@ -247,40 +278,52 @@ export function DashboardPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-slate-100">
-                  <th className="text-left py-4 px-6 text-sm font-medium text-slate-500">ID</th>
-                  <th className="text-left py-4 px-6 text-sm font-medium text-slate-500">Título</th>
-                  <th className="text-left py-4 px-6 text-sm font-medium text-slate-500">Estado</th>
-                  <th className="text-left py-4 px-6 text-sm font-medium text-slate-500">Prioridad</th>
-                  <th className="text-left py-4 px-6 text-sm font-medium text-slate-500">Fecha</th>
+                <tr className="bg-gradient-to-r from-slate-50 to-blue-50">
+                  <th className="text-left py-4 px-6 text-sm font-bold text-slate-600">ID</th>
+                  <th className="text-left py-4 px-6 text-sm font-bold text-slate-600">Título</th>
+                  <th className="text-left py-4 px-6 text-sm font-bold text-slate-600">Estado</th>
+                  <th className="text-left py-4 px-6 text-sm font-bold text-slate-600">Prioridad</th>
+                  <th className="text-left py-4 px-6 text-sm font-bold text-slate-600">Fecha</th>
                 </tr>
               </thead>
               <tbody>
                 {tickets.slice(0, 5).map((ticket) => (
-                  <tr key={ticket.id} className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer">
-                    <td className="py-4 px-6 text-sm font-medium text-blue-600">{ticket.ticketNumber}</td>
-                    <td className="py-4 px-6 text-sm text-slate-800">{ticket.title}</td>
+                  <tr key={ticket.id} className="border-b border-slate-50 hover:bg-blue-50/30 transition-colors">
                     <td className="py-4 px-6">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        ticket.status === 'new' ? 'bg-blue-100 text-blue-700' :
-                        ticket.status === 'in_progress' ? 'bg-amber-100 text-amber-700' :
-                        ticket.status === 'closed' ? 'bg-green-100 text-green-700' :
-                        'bg-red-100 text-red-700'
+                      <span className="font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">{ticket.ticketNumber}</span>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="font-medium text-slate-800">{ticket.title}</div>
+                      <div className="text-sm text-slate-500 truncate max-w-xs">{ticket.description}</div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${
+                        ticket.status === 'new' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                        ticket.status === 'in_progress' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                        ticket.status === 'closed' ? 'bg-green-50 text-green-700 border border-green-200' :
+                        'bg-red-50 text-red-700 border border-red-200'
                       }`}>
-                        {ticket.status}
+                        {ticket.status === 'new' ? 'Nuevo' : 
+                         ticket.status === 'in_progress' ? 'En Progreso' : 
+                         ticket.status === 'closed' ? 'Cerrado' : 
+                         ticket.status === 'pending' ? 'Pendiente' : ticket.status}
                       </span>
                     </td>
                     <td className="py-4 px-6">
-                      <span className={`text-xs font-medium ${
-                        ticket.priority === 'high' || ticket.priority === 'critical' ? 'text-red-600' :
-                        ticket.priority === 'medium' ? 'text-amber-600' :
-                        'text-slate-600'
+                      <span className={`text-xs font-bold px-3 py-1.5 rounded-lg capitalize ${
+                        ticket.priority === 'high' || ticket.priority === 'critical' ? 'bg-red-50 text-red-600' :
+                        ticket.priority === 'medium' ? 'bg-amber-50 text-amber-600' :
+                        'bg-slate-50 text-slate-600'
                       }`}>
                         {ticket.priority}
                       </span>
                     </td>
                     <td className="py-4 px-6 text-sm text-slate-500">
-                      {new Date(ticket.createdAt).toLocaleDateString('es-ES')}
+                      {new Date(ticket.createdAt).toLocaleDateString('es-ES', { 
+                        day: 'numeric', 
+                        month: 'short', 
+                        year: 'numeric' 
+                      })}
                     </td>
                   </tr>
                 ))}

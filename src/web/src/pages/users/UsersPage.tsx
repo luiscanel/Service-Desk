@@ -103,37 +103,52 @@ export function UsersPage() {
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getRoleBadge = (role: string) => {
-    const variants: Record<string, 'default' | 'success' | 'warning' | 'danger' | 'info'> = {
-      admin: 'danger',
-      agent: 'info',
-      user: 'default',
-    };
-    const labels: Record<string, string> = {
-      admin: 'Administrador',
-      agent: 'Agente',
-      user: 'Usuario',
-    };
-    return <Badge variant={variants[role] || 'default'}>{labels[role] || role}</Badge>;
+  const getAvatarGradient = (name: string) => {
+    const gradients = [
+      'from-blue-500 to-cyan-500',
+      'from-purple-500 to-pink-500',
+      'from-green-500 to-emerald-500',
+      'from-orange-500 to-amber-500',
+      'from-red-500 to-rose-500',
+      'from-indigo-500 to-violet-500',
+    ];
+    const index = name.charCodeAt(0) % gradients.length;
+    return gradients[index];
   };
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">Usuarios</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-slate-800">Usuarios</h1>
+          <p className="text-slate-500 mt-1">Gestiona los usuarios del sistema</p>
+        </div>
         <Button onClick={() => setIsModalOpen(true)}>
-          + Nuevo Usuario
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Nuevo Usuario
         </Button>
       </div>
 
       {/* Search */}
       <Card>
         <CardBody>
-          <Input
-            placeholder="Buscar usuarios..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          <div className="relative">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              placeholder="Buscar usuarios..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            />
+          </div>
         </CardBody>
       </Card>
 
@@ -142,39 +157,41 @@ export function UsersPage() {
         {loading ? (
           <div className="col-span-full text-center py-12 text-slate-500">Cargando...</div>
         ) : filteredUsers.length === 0 ? (
-          <div className="col-span-full text-center py-12 text-slate-500">No se encontraron usuarios</div>
+          <div className="col-span-full text-center py-12">
+            <div className="w-20 h-20 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center text-4xl">👥</div>
+            <p className="text-slate-500">No se encontraron usuarios</p>
+          </div>
         ) : (
-          filteredUsers.map((user) => (
-            <Card key={user.id} hover>
+          filteredUsers.map((user, index) => (
+            <Card key={user.id} hover className="animate-fade-in-up" style={{ animationDelay: `${index * 50}ms` }}>
               <CardBody>
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                    <div className={`w-14 h-14 bg-gradient-to-br ${getAvatarGradient(user.firstName)} rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg`}>
                       {user.firstName.charAt(0)}{user.lastName.charAt(0)}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-slate-800">{user.firstName} {user.lastName}</h3>
+                      <h3 className="font-bold text-slate-800 text-lg">{user.firstName} {user.lastName}</h3>
                       <p className="text-sm text-slate-500">{user.email}</p>
                     </div>
                   </div>
-                  {getRoleBadge(user.role)}
                 </div>
                 
-                <div className="space-y-2 text-sm">
+                <div className="space-y-3 text-sm">
                   {user.department && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Departamento:</span>
-                      <span className="text-slate-700">{user.department}</span>
+                    <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
+                      <span className="text-slate-500">Departamento</span>
+                      <span className="font-medium text-slate-700">{user.department}</span>
                     </div>
                   )}
                   {user.phone && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Teléfono:</span>
-                      <span className="text-slate-700">{user.phone}</span>
+                    <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
+                      <span className="text-slate-500">Teléfono</span>
+                      <span className="font-medium text-slate-700">{user.phone}</span>
                     </div>
                   )}
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Estado:</span>
+                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
+                    <span className="text-slate-500">Estado</span>
                     <Badge variant={user.isActive ? 'success' : 'default'}>
                       {user.isActive ? 'Activo' : 'Inactivo'}
                     </Badge>
@@ -184,15 +201,15 @@ export function UsersPage() {
                 <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between">
                   <button
                     onClick={() => openEditModal(user)}
-                    className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                    className="text-blue-600 hover:text-blue-700 text-sm font-medium hover:bg-blue-50 px-3 py-2 rounded-lg transition-colors"
                   >
-                    Editar
+                    ✏️ Editar
                   </button>
                   <button
                     onClick={() => handleDeleteUser(user.id)}
-                    className="text-red-600 hover:text-red-700 text-sm font-medium"
+                    className="text-red-600 hover:text-red-700 text-sm font-medium hover:bg-red-50 px-3 py-2 rounded-lg transition-colors"
                   >
-                    Eliminar
+                    🗑️ Eliminar
                   </button>
                 </div>
               </CardBody>
@@ -208,7 +225,7 @@ export function UsersPage() {
         title="Crear Nuevo Usuario"
         size="lg"
       >
-        <form onSubmit={handleCreateUser} className="space-y-4">
+        <form onSubmit={handleCreateUser} className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <Input
               label="Nombre"
@@ -243,11 +260,17 @@ export function UsersPage() {
           />
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Rol</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Rol</label>
               <select
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none cursor-pointer"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 12px center',
+                  backgroundSize: '20px'
+                }}
               >
                 <option value="user">Usuario</option>
                 <option value="agent">Agente</option>
@@ -285,7 +308,7 @@ export function UsersPage() {
         title="Editar Usuario"
         size="lg"
       >
-        <form onSubmit={handleUpdateUser} className="space-y-4">
+        <form onSubmit={handleUpdateUser} className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <Input
               label="Nombre"
@@ -316,11 +339,11 @@ export function UsersPage() {
           />
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Rol</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Rol</label>
               <select
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               >
                 <option value="user">Usuario</option>
                 <option value="agent">Agente</option>

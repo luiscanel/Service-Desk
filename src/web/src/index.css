@@ -1,3 +1,291 @@
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --primary-50: #eff6ff;
+  --primary-100: #dbeafe;
+  --primary-500: #3b82f6;
+  --primary-600: #2563eb;
+  --primary-700: #1d4ed8;
+  --accent-500: #8b5cf6;
+  --accent-600: #7c3aed;
+}
+
+* {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+  @apply bg-slate-50 text-slate-800 antialiased;
+  background-image: 
+    radial-gradient(ellipse at top left, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom right, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+  min-height: 100vh;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-slate-100 rounded-full;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full hover:bg-slate-400 transition-colors;
+}
+
+/* Glassmorphism Utilities */
+@layer utilities {
+  .glass {
+    @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-xl;
+  }
+  
+  .glass-dark {
+    @apply bg-slate-900/80 backdrop-blur-xl border border-slate-700/50;
+  }
+  
+  .glass-card {
+    @apply bg-white/60 backdrop-blur-md border border-white/40 shadow-lg;
+  }
+}
+
+/* Gradient Text */
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600;
+}
+
+.gradient-text-warm {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-red-500;
+}
+
+/* Animated Backgrounds */
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 8s ease infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.5); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Card Hover Effects */
+@layer components {
+  .card-hover {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-xl;
+  }
+  
+  .card-glow {
+    @apply transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20;
+  }
+}
+
+/* Button Hover Glow */
+.btn-glow {
+  @apply relative overflow-hidden transition-all duration-300;
+}
+
+.btn-glow::before {
+  content: '';
+  @apply absolute inset-0 bg-white/20 -translate-x-full transition-transform duration-300;
+}
+
+.btn-glow:hover::before {
+  @apply translate-x-0;
+}
+
+/* Input Focus Effects */
+input:focus, select:focus, textarea:focus {
+  @apply outline-none;
+}
+
+/* Table Styles */
+.table-row-hover {
+  @apply transition-colors duration-150 hover:bg-blue-50/50;
+}
+
+/* Badge Glow Effects */
+.badge-glow {
+  @apply relative;
+}
+
+.badge-glow::after {
+  content: '';
+  @apply absolute inset-0 rounded-full opacity-20 blur-sm;
+}
+
+.badge-glow-blue::after {
+  @apply bg-blue-500;
+}
+
+.badge-glow-green::after {
+  @apply bg-green-500;
+}
+
+.badge-glow-amber::after {
+  @apply bg-amber-500;
+}
+
+.badge-glow-red::after {
+  @apply bg-red-500;
+}
+
+/* Animations */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out forwards;
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in-right 0.4s ease-out forwards;
+}
+
+/* Staggered Animation Delays */
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+/* Status Colors */
+.status-new {
+  @apply bg-blue-100 text-blue-700 border-blue-200;
+}
+
+.status-progress {
+  @apply bg-amber-100 text-amber-700 border-amber-200;
+}
+
+.status-pending {
+  @apply bg-red-100 text-red-700 border-red-200;
+}
+
+.status-resolved {
+  @apply bg-green-100 text-green-700 border-green-200;
+}
+
+.status-closed {
+  @apply bg-slate-100 text-slate-700 border-slate-200;
+}
+
+/* Priority Indicators */
+.priority-critical {
+  @apply text-red-600 bg-red-50;
+}
+
+.priority-high {
+  @apply text-orange-600 bg-orange-50;
+}
+
+.priority-medium {
+  @apply text-amber-600 bg-amber-50;
+}
+
+.priority-low {
+  @apply text-slate-600 bg-slate-50;
+}
+
+/* Sidebar Active Indicator */
+.sidebar-active {
+  @apply relative;
+}
+
+.sidebar-active::before {
+  content: '';
+  @apply absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-500 rounded-r-full;
+}
+
+/* Custom Focus Ring */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-white;
+}
+
+/* Loading Skeleton */
+.skeleton {
+  @apply animate-pulse bg-slate-200 rounded;
+}
+
+/* Blob Animation for Login */
+@keyframes blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Shake Animation */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* Line clamp */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
