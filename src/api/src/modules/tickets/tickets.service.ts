@@ -68,7 +68,7 @@ export class TicketsService {
         await this.ticketRepository.save(savedTicket);
         
         // Notify via WebSocket
-        this.notificationsGateway.emitTicketAssigned(savedTicket, assignedAgent.email || '');
+        this.notificationsGateway.emitTicketAssigned(savedTicket, '');
         this.logger.log(`Ticket ${ticketNumber} auto-asignado al agente ${assignedAgent.id}`);
       }
     }
@@ -133,14 +133,6 @@ export class TicketsService {
       
       // Notify via WebSocket
       this.notificationsGateway.emitTicketResolved(ticket);
-    }
-    
-    // Check SLA breach on priority change to higher
-    if (oldPriority !== newStatus && newStatus === TicketStatus.CRITICAL) {
-      const newDeadline = await this.slaService.applySlaToTicket(ticket);
-      if (newDeadline) {
-        await this.ticketRepository.update(ticket.id, { slaDeadline: newDeadline });
-      }
     }
   }
 
