@@ -1,11 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AgentStats, Achievement, AchievementUnlock, AchievementType } from './entities/gamification.entity';
 import { Ticket } from '../tickets/entities/ticket.entity';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
 
 @Injectable()
 export class GamificationService {
+  private readonly logger = new Logger(GamificationService.name);
+
   constructor(
     @InjectRepository(AgentStats)
     private agentStatsRepository: Repository<AgentStats>,
@@ -15,6 +18,7 @@ export class GamificationService {
     private unlockRepository: Repository<AchievementUnlock>,
     @InjectRepository(Ticket)
     private ticketRepository: Repository<Ticket>,
+    private notificationsGateway: NotificationsGateway,
   ) {}
 
   async onModuleInit() {
@@ -39,6 +43,7 @@ export class GamificationService {
     for (const ach of achievements) {
       await this.achievementRepository.save({ ...ach, isActive: true });
     }
+    this.logger.log('Achievements seeded successfully');
   }
 
   async getOrCreateAgentStats(agentId: string): Promise<AgentStats> {
@@ -52,9 +57,21 @@ export class GamificationService {
 
   async addPoints(agentId: string, points: number, reason: string): Promise<AgentStats> {
     const stats = await this.getOrCreateAgentStats(agentId);
+    const oldLevel = stats.level;
+    
     stats.points += points;
     stats.level = Math.floor(stats.points / 100) + 1;
+    
     await this.agentStatsRepository.save(stats);
+    
+    // Notify if level up
+    if (stats.level > oldLevel) {
+      this.notificationsGateway.notifyUser(agentId, 'level:up', { 
+        newLevel: stats.level, 
+        points: stats.points 
+      });
+    }
+    
     return stats;
   }
 
@@ -62,6 +79,7 @@ export class GamificationService {
     const stats = await this.getOrCreateAgentStats(agentId);
     stats.ticketsResolved++;
     stats.currentStreak++;
+    
     if (stats.currentStreak > stats.longestStreak) {
       stats.longestStreak = stats.currentStreak;
     }
@@ -70,6 +88,7 @@ export class GamificationService {
     let pointsEarned = 10;
     const newBadges: string[] = [];
 
+    // Check for quick resolution achievement (< 1 hour)
     if (resolutionHours < 1) {
       const quickAch = await this.achievementRepository.findOne({ where: { type: AchievementType.QUICK_RESOLUTION } });
       if (quickAch) {
@@ -78,10 +97,16 @@ export class GamificationService {
           await this.unlockRepository.save({ agentId, achievementId: quickAch.id });
           pointsEarned += quickAch.pointsValue;
           newBadges.push(quickAch.name);
+          
+          // Notify achievement
+          this.notificationsGateway.notifyUser(agentId, 'achievement:unlocked', { 
+            achievement: quickAch 
+          });
         }
       }
     }
 
+    // Check for first ticket achievement
     if (stats.ticketsResolved === 1) {
       const firstAch = await this.achievementRepository.findOne({ where: { type: AchievementType.TICKET_RESOLVED } });
       if (firstAch) {
@@ -90,10 +115,15 @@ export class GamificationService {
           await this.unlockRepository.save({ agentId, achievementId: firstAch.id });
           pointsEarned += firstAch.pointsValue;
           newBadges.push(firstAch.name);
+          
+          this.notificationsGateway.notifyUser(agentId, 'achievement:unlocked', { 
+            achievement: firstAch 
+          });
         }
       }
     }
 
+    // Check for streak achievement (3+ tickets)
     if (stats.currentStreak >= 3) {
       const streakAch = await this.achievementRepository.findOne({ where: { type: AchievementType.STREAK } });
       if (streakAch) {
@@ -102,13 +132,46 @@ export class GamificationService {
           await this.unlockRepository.save({ agentId, achievementId: streakAch.id });
           pointsEarned += streakAch.pointsValue;
           newBadges.push(streakAch.name);
+          
+          this.notificationsGateway.notifyUser(agentId, 'achievement:unlocked', { 
+            achievement: streakAch 
+          });
         }
       }
     }
 
+    // Update average rating
+    const agentTickets = await this.ticketRepository
+      .createQueryBuilder('ticket')
+      .where('ticket.assignedToId = :agentId', { agentId })
+      .andWhere('ticket.satisfactionRating IS NOT NULL')
+      .getMany();
+    
+    if (agentTickets.length > 0) {
+      const totalRating = agentTickets.reduce((sum, t) => sum + (t.satisfactionRating || 0), 0);
+      stats.rating = totalRating / agentTickets.length;
+    }
+
+    const oldLevel = stats.level;
     stats.points += pointsEarned;
     stats.level = Math.floor(stats.points / 100) + 1;
+    
     await this.agentStatsRepository.save(stats);
+
+    // Notify points earned
+    this.notificationsGateway.notifyUser(agentId, 'points:earned', { 
+      points: pointsEarned,
+      totalPoints: stats.points,
+      newBadges
+    });
+
+    // Check for level up
+    if (stats.level > oldLevel) {
+      this.notificationsGateway.notifyUser(agentId, 'level:up', { 
+        newLevel: stats.level, 
+        points: stats.points 
+      });
+    }
 
     return { stats, newBadges };
   }

@@ -1,25 +1,33 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Ticket, TicketStatus } from './entities/ticket.entity';
+import { Ticket, TicketStatus, TicketPriority } from './entities/ticket.entity';
 import { EmailService } from '../email/email.service';
 import { SlaService } from '../sla/sla.service';
 import { AutoAssignmentService } from '../auto-assignment/auto-assignment.service';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
+import { GamificationService } from '../gamification/gamification.service';
 import { EMAIL_TEMPLATES } from '../../common/constants';
 import { CreateTicketDto, UpdateTicketDto, SurveyResponseDto } from './dto/ticket.dto';
 
 @Injectable()
 export class TicketsService {
+  private readonly logger = new Logger(TicketsService.name);
+
   constructor(
     @InjectRepository(Ticket) 
     private readonly ticketRepository: Repository<Ticket>,
     private readonly emailService: EmailService,
     private readonly slaService: SlaService,
     private readonly autoAssignmentService: AutoAssignmentService,
+    private readonly notificationsGateway: NotificationsGateway,
+    private readonly gamificationService: GamificationService,
   ) {}
 
   async findAll(): Promise<Ticket[]> {
-    return this.ticketRepository.find();
+    return this.ticketRepository.find({
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async findOne(id: string): Promise<Ticket> {
@@ -30,7 +38,7 @@ export class TicketsService {
     return ticket;
   }
 
-  async create(dto: CreateTicketDto): Promise<Ticket> {
+  async create(dto: CreateTicketDto, user?: any): Promise<Ticket> {
     // Generate ticket number
     const count = await this.ticketRepository.count();
     const year = new Date().getFullYear();
@@ -39,6 +47,7 @@ export class TicketsService {
     const ticket = this.ticketRepository.create({
       ...dto,
       ticketNumber,
+      requesterId: user?.id || dto.requesterId,
     });
     
     // Calculate SLA deadline based on priority
@@ -57,18 +66,82 @@ export class TicketsService {
         savedTicket.status = TicketStatus.ASSIGNED;
         savedTicket.assignedAt = new Date();
         await this.ticketRepository.save(savedTicket);
+        
+        // Notify via WebSocket
+        this.notificationsGateway.emitTicketAssigned(savedTicket, assignedAgent.email || '');
+        this.logger.log(`Ticket ${ticketNumber} auto-asignado al agente ${assignedAgent.id}`);
       }
     }
     
-    return savedTicket;
+    // Notify new ticket created
+    this.notificationsGateway.emitNewTicket(savedTicket);
+    
+    // Send email notification
+    if (savedTicket.requesterEmail) {
+      await this.emailService.sendTicketCreated(savedTicket.requesterEmail, savedTicket);
+    }
+    
+    return this.findOne(savedTicket.id);
   }
 
-  async update(id: string, dto: UpdateTicketDto): Promise<Ticket> {
+  async update(id: string, dto: UpdateTicketDto, user?: any): Promise<Ticket> {
     const ticket = await this.findOne(id);
+    const oldStatus = ticket.status;
     const updates = this.calculateTimestampTransitions(ticket, dto);
     
     await this.ticketRepository.update(id, { ...dto, ...updates });
-    return this.findOne(id);
+    const updatedTicket = await this.findOne(id);
+    
+    // Handle status change notifications
+    if (dto.status && dto.status !== oldStatus) {
+      this.handleStatusChange(updatedTicket, oldStatus, dto.status);
+    }
+    
+    // Update agent workload when assigned
+    if (dto.assignedToId && dto.assignedToId !== ticket.assignedToId) {
+      await this.autoAssignmentService.updateAgentWorkload(dto.assignedToId);
+    }
+    
+    // Notify via WebSocket
+    this.notificationsGateway.emitTicketUpdated(updatedTicket);
+    
+    return updatedTicket;
+  }
+
+  private async handleStatusChange(ticket: Ticket, oldStatus: TicketStatus, newStatus: TicketStatus) {
+    const oldPriority = ticket.priority;
+    
+    // When ticket is resolved, trigger gamification and send notification
+    if (newStatus === TicketStatus.RESOLVED) {
+      if (ticket.assignedToId) {
+        // Calculate resolution time in hours
+        const resolutionTimeMs = new Date().getTime() - new Date(ticket.assignedAt || ticket.createdAt).getTime();
+        const resolutionTimeHours = resolutionTimeMs / (1000 * 60 * 60);
+        
+        // Trigger gamification
+        try {
+          await this.gamificationService.onTicketResolved(ticket.assignedToId, resolutionTimeHours);
+        } catch (error) {
+          this.logger.error(`Error en gamificación: ${error.message}`);
+        }
+      }
+      
+      // Send resolution email
+      if (ticket.requesterEmail) {
+        await this.emailService.sendTicketResolved(ticket.requesterEmail, ticket);
+      }
+      
+      // Notify via WebSocket
+      this.notificationsGateway.emitTicketResolved(ticket);
+    }
+    
+    // Check SLA breach on priority change to higher
+    if (oldPriority !== newStatus && newStatus === TicketStatus.CRITICAL) {
+      const newDeadline = await this.slaService.applySlaToTicket(ticket);
+      if (newDeadline) {
+        await this.ticketRepository.update(ticket.id, { slaDeadline: newDeadline });
+      }
+    }
   }
 
   async remove(id: string): Promise<void> {
