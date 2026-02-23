@@ -1,10 +1,13 @@
 services:
+  # ============================================
+  # Base de Datos PostgreSQL
+  # ============================================
   postgres:
     image: postgres:15-alpine
     container_name: servicedesk-db
     environment:
       POSTGRES_USER: servicedesk
-      POSTGRES_PASSWORD: ChangeMe123
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-ChangeMe123}
       POSTGRES_DB: servicedesk
     ports:
       - "5432:5432"
@@ -12,7 +15,16 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - servicedesk-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U servicedesk"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # ============================================
+  # Redis Cache
+  # ============================================
   redis:
     image: redis:7-alpine
     container_name: servicedesk-redis
@@ -20,7 +32,11 @@ services:
       - "6379:6379"
     networks:
       - servicedesk-network
+    restart: unless-stopped
 
+  # ============================================
+  # API Backend (NestJS)
+  # ============================================
   api:
     build:
       context: ../src/api
@@ -29,15 +45,21 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=development
-      - DATABASE_URL=postgresql://servicedesk:ChangeMe123@postgres:5432/servicedesk
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://servicedesk:${DB_PASSWORD:-ChangeMe123}@postgres:5432/servicedesk
       - REDIS_URL=redis://redis:6379
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost}
+      - JWT_SECRET=${JWT_SECRET:-CHANGE_ME_IN_PRODUCTION}
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
     networks:
       - servicedesk-network
+    restart: unless-stopped
 
+  # ============================================
+  # Frontend Web (React/Vite)
+  # ============================================
   web:
     build:
       context: ../src/web
@@ -45,10 +67,32 @@ services:
     container_name: servicedesk-web
     ports:
       - "5173:5173"
+    environment:
+      - VITE_API_URL=/api
     depends_on:
       - api
     networks:
       - servicedesk-network
+    restart: unless-stopped
+
+  # ============================================
+  # Nginx Proxy con SSL (Puerto 80/443)
+  # ============================================
+  nginx:
+    image: nginx:alpine
+    container_name: servicedesk-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api
+      - web
+    networks:
+      - servicedesk-network
+    restart: unless-stopped
 
 volumes:
   postgres_data:
