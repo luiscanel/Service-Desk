@@ -1,11 +1,14 @@
 import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { LoginDto, RegisterDto, AuthResponse } from './dto/auth.dto';
 import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
+  private readonly SALT_ROUNDS = 10;
+
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
@@ -13,9 +16,15 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<Omit<User, 'password'> | null> {
     const user = await this.usersService.findByEmail(email);
-    if (!user || user.password !== password) {
+    if (!user) {
       return null;
     }
+    
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return null;
+    }
+    
     const { password: _, ...result } = user;
     return result;
   }
@@ -34,7 +43,13 @@ export class AuthService {
       throw new ConflictException('El email ya está registrado');
     }
 
-    const user = await this.usersService.create(dto);
+    // Hash password before creating user
+    const hashedPassword = await bcrypt.hash(dto.password, this.SALT_ROUNDS);
+    const user = await this.usersService.create({
+      ...dto,
+      password: hashedPassword,
+    });
+    
     const { password, ...result } = user;
     return this.generateToken(result);
   }

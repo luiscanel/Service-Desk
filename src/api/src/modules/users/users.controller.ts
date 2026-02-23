@@ -1,32 +1,41 @@
-import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
-import { User } from './entities/user.entity';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
+@ApiTags('Users')
+@ApiBearerAuth()
 @Controller('api/users')
+@UseGuards(JwtAuthGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  findAll(): Promise<User[]> {
+  @ApiOperation({ summary: 'Obtener todos los usuarios' })
+  findAll(): Promise<any[]> {
     return this.usersService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<User> {
+  @ApiOperation({ summary: 'Obtener usuario por ID' })
+  findOne(@Param('id') id: string): Promise<any> {
     return this.usersService.findOne(id);
   }
 
   @Post()
-  create(@Body() createUserDto: Partial<User>): Promise<User> {
+  @ApiOperation({ summary: 'Crear usuario' })
+  create(@Body() createUserDto: Partial<any>): Promise<any> {
     return this.usersService.create(createUserDto);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: Partial<User>): Promise<User> {
+  @ApiOperation({ summary: 'Actualizar usuario' })
+  update(@Param('id') id: string, @Body() updateUserDto: Partial<any>): Promise<any> {
     return this.usersService.update(id, updateUserDto);
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Eliminar usuario' })
   remove(@Param('id') id: string): Promise<void> {
     return this.usersService.remove(id);
   }
