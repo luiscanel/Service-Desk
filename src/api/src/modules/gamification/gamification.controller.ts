@@ -1,9 +1,12 @@
-import { Controller, Get, Post, Param, ParseUUIDPipe, Headers, HttpCode } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiHeader } from '@nestjs/swagger';
+import { Controller, Get, Post, Param, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { GamificationService } from './gamification.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @ApiTags('Gamification')
+@ApiBearerAuth()
 @Controller('gamification')
+@UseGuards(JwtAuthGuard)
 export class GamificationController {
   constructor(private readonly gamificationService: GamificationService) {}
 
@@ -27,16 +30,13 @@ export class GamificationController {
 
   @Get('stats/:agentId')
   @ApiOperation({ summary: 'Get agent stats' })
-  getAgentStats(@Param('agentId', ParseUUIDPipe) agentId: string) {
+  getAgentStats(@Param('agentId') agentId: string) {
     return this.gamificationService.getMyStats(agentId);
   }
 
   @Post('ticket-resolved/:agentId')
-  @HttpCode(200)
   @ApiOperation({ summary: 'Record ticket resolved' })
-  onTicketResolved(
-    @Param('agentId', ParseUUIDPipe) agentId: string,
-  ) {
+  onTicketResolved(@Param('agentId') agentId: string) {
     return this.gamificationService.onTicketResolved(agentId, 2);
   }
 }

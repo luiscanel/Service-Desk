@@ -1,10 +1,13 @@
-import { Controller, Get, Post, Body, Put, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { MacrosService } from './macros.service';
 import { CreateMacroDto, UpdateMacroDto } from './dto/macro.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @ApiTags('Macros')
+@ApiBearerAuth()
 @Controller('api/macros')
+@UseGuards(JwtAuthGuard)
 export class MacrosController {
   constructor(private readonly macrosService: MacrosService) {}
 

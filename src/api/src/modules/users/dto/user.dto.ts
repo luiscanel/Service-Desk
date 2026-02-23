@@ -2,7 +2,11 @@ import { IsString, IsOptional, IsEmail, IsEnum, IsBoolean } from 'class-validato
 
 export enum UserRole {
   ADMIN = 'admin',
-  AGENT = 'agent',
+  MANAGER = 'manager',
+  AGENT_L1 = 'agent_l1',
+  AGENT_L2 = 'agent_l2',
+  AGENT_L3 = 'agent_l3',
+  SPECIALIST = 'specialist',
   USER = 'user',
 }
 
@@ -26,6 +30,14 @@ export class CreateUserDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @IsOptional()
+  @IsString()
+  department?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
 }
 
 export class UpdateUserDto {
@@ -48,4 +60,12 @@ export class UpdateUserDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @IsOptional()
+  @IsString()
+  department?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
 }

@@ -1,26 +1,24 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, ParseUUIDPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { KnowledgeService } from './knowledge.service';
 import { CreateKnowledgeArticleDto, UpdateKnowledgeArticleDto, KnowledgeSearchDto } from './dto/knowledge-article.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @ApiTags('Knowledge Base')
+@ApiBearerAuth()
 @Controller('knowledge')
+@UseGuards(JwtAuthGuard)
 export class KnowledgeController {
   constructor(private readonly knowledgeService: KnowledgeService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new knowledge article' })
-  @ApiResponse({ status: 201, description: 'Article created successfully' })
   create(@Body() createDto: CreateKnowledgeArticleDto) {
     return this.knowledgeService.create(createDto);
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all knowledge articles with pagination and filters' })
-  @ApiQuery({ name: 'search', required: false })
-  @ApiQuery({ name: 'category', required: false })
-  @ApiQuery({ name: 'page', required: false })
-  @ApiQuery({ name: 'limit', required: false })
   findAll(@Query() searchDto: KnowledgeSearchDto) {
     return this.knowledgeService.findAll(searchDto);
   }
@@ -45,28 +43,25 @@ export class KnowledgeController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a single knowledge article' })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
+  findOne(@Param('id') id: string) {
     return this.knowledgeService.findOne(id);
   }
 
   @Put(':id')
   @ApiOperation({ summary: 'Update a knowledge article' })
-  update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateDto: UpdateKnowledgeArticleDto,
-  ) {
+  update(@Param('id') id: string, @Body() updateDto: UpdateKnowledgeArticleDto) {
     return this.knowledgeService.update(id, updateDto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a knowledge article' })
-  remove(@Param('id', ParseUUIDPipe) id: string) {
+  remove(@Param('id') id: string) {
     return this.knowledgeService.remove(id);
   }
 
   @Post(':id/views')
   @ApiOperation({ summary: 'Increment article view count' })
-  incrementViews(@Param('id', ParseUUIDPipe) id: string) {
+  incrementViews(@Param('id') id: string) {
     return this.knowledgeService.incrementViews(id);
   }
 }
