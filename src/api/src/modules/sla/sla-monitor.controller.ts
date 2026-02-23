@@ -1,9 +1,12 @@
-import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SlaMonitorService } from './sla-monitor.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @ApiTags('SLA Monitor')
+@ApiBearerAuth()
 @Controller('sla-monitor')
+@UseGuards(JwtAuthGuard)
 export class SlaMonitorController {
   constructor(private readonly slaMonitorService: SlaMonitorService) {}
 
@@ -27,7 +30,7 @@ export class SlaMonitorController {
 
   @Get('ticket/:ticketId')
   @ApiOperation({ summary: 'Calculate SLA for a specific ticket' })
-  getTicketSLA(@Param('ticketId', ParseUUIDPipe) ticketId: string) {
+  getTicketSLA(@Param('ticketId') ticketId: string) {
     return this.slaMonitorService.calculateSLAForTicket(ticketId);
   }
 }

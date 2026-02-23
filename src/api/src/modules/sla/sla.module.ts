@@ -8,11 +8,13 @@ import { SlaMonitorService } from './sla-monitor.service';
 import { SlaPolicy } from './entities/sla-policy.entity';
 import { Ticket } from '../tickets/entities/ticket.entity';
 import { EmailModule } from '../email/email.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([SlaPolicy, Ticket]),
     EmailModule,
+    NotificationsModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [SlaController, SlaMonitorController],

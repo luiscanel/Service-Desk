@@ -1,9 +1,12 @@
-import { Controller, Get, Post, Body, Put, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SlaService } from './sla.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @ApiTags('SLA')
+@ApiBearerAuth()
 @Controller('api/sla')
+@UseGuards(JwtAuthGuard)
 export class SlaController {
   constructor(private readonly slaService: SlaService) {}
 
@@ -28,6 +31,7 @@ export class SlaController {
     resolutionTimeHours: number;
     description?: string;
     escalationEmail?: string;
+    notifyOnBreach?: boolean;
   }) {
     return this.slaService.createPolicy(data);
   }
