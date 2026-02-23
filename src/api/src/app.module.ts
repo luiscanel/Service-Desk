@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { TicketsModule } from './modules/tickets/tickets.module';
 import { AgentsModule } from './modules/agents/agents.module';
 import { UsersModule } from './modules/users/users.module';
@@ -31,6 +32,13 @@ import { AgentStats, Achievement, AchievementUnlock } from './modules/gamificati
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    // Rate Limiting - Protección contra DDoS
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 1 minuto
+        limit: 100, // 100 requests por minuto
+      },
+    ]),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DATABASE_HOST || 'postgres',
