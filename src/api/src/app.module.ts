@@ -18,6 +18,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { KnowledgeModule } from './modules/knowledge/knowledge.module';
 import { GamificationModule } from './modules/gamification/gamification.module';
+import { WorkflowsModule } from './modules/workflows/workflows.module';
 import { Ticket } from './modules/tickets/entities/ticket.entity';
 import { User } from './modules/users/entities/user.entity';
 import { Agent } from './modules/agents/entities/agent.entity';
@@ -28,6 +29,7 @@ import { AuditLog } from './modules/audit/entities/audit-log.entity';
 import { ScheduledReport } from './modules/reports/entities/scheduled-report.entity';
 import { KnowledgeArticle } from './modules/knowledge/entities/knowledge-article.entity';
 import { AgentStats, Achievement, AchievementUnlock } from './modules/gamification/entities/gamification.entity';
+import { Workflow } from './modules/workflows/entities/workflow.entity';
 
 @Module({
   imports: [
@@ -46,7 +48,7 @@ import { AgentStats, Achievement, AchievementUnlock } from './modules/gamificati
       username: 'servicedesk',
       password: 'ChangeMe123',
       database: 'servicedesk',
-      entities: [Ticket, User, Agent, Setting, Macro, SlaPolicy, AuditLog, ScheduledReport, KnowledgeArticle, AgentStats, Achievement, AchievementUnlock],
+      entities: [Ticket, User, Agent, Setting, Macro, SlaPolicy, AuditLog, ScheduledReport, KnowledgeArticle, AgentStats, Achievement, AchievementUnlock, Workflow],
       synchronize: false,
       migrationsRun: true,
     }),
@@ -66,6 +68,7 @@ import { AgentStats, Achievement, AchievementUnlock } from './modules/gamificati
     ReportsModule,
     KnowledgeModule,
     GamificationModule,
+    WorkflowsModule,
   ],
 })
 export class AppModule {}
