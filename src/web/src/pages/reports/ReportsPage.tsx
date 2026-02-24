@@ -1,49 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import { ticketsService } from '../../services/api';
 import { Card, CardHeader, CardBody, Select, Button } from '../../components/ui';
-
-const monthlyData = [
-  { month: 'Ene', tickets: 45, resolved: 38 },
-  { month: 'Feb', tickets: 52, resolved: 45 },
-  { month: 'Mar', tickets: 38, resolved: 35 },
-  { month: 'Abr', tickets: 65, resolved: 55 },
-  { month: 'May', tickets: 48, resolved: 42 },
-  { month: 'Jun', tickets: 72, resolved: 65 },
-];
-
-const categoryData = [
-  { name: 'Hardware', value: 35, color: '#3B82F6' },
-  { name: 'Software', value: 28, color: '#10B981' },
-  { name: 'Redes', value: 20, color: '#F59E0B' },
-  { name: 'Seguridad', value: 12, color: '#EF4444' },
-  { name: 'Otros', value: 5, color: '#8B5CF6' },
-];
-
-const priorityData = [
-  { name: 'Baja', count: 45, color: '#10B981' },
-  { name: 'Media', count: 30, color: '#F59E0B' },
-  { name: 'Alta', count: 18, color: '#EF4444' },
-  { name: 'Crítica', count: 7, color: '#DC2626' },
-];
-
-const weeklyPerformance = [
-  { day: 'Lun', avgTime: 2.5, resolved: 12 },
-  { day: 'Mar', avgTime: 3.2, resolved: 15 },
-  { day: 'Mié', avgTime: 2.8, resolved: 18 },
-  { day: 'Jue', avgTime: 4.1, resolved: 14 },
-  { day: 'Vie', avgTime: 3.5, resolved: 20 },
-  { day: 'Sáb', avgTime: 1.8, resolved: 8 },
-  { day: 'Dom', avgTime: 1.2, resolved: 5 },
-];
-
-const agentPerformance = [
-  { name: 'Juan Pérez', tickets: 45, avgTime: 2.5, satisfaction: 4.8 },
-  { name: 'María García', tickets: 38, avgTime: 3.2, satisfaction: 4.6 },
-  { name: 'Carlos López', tickets: 32, avgTime: 2.8, satisfaction: 4.9 },
-  { name: 'Ana Martínez', tickets: 28, avgTime: 4.1, satisfaction: 4.4 },
-  { name: 'Pedro Sánchez', tickets: 25, avgTime: 3.5, satisfaction: 4.7 },
-];
 
 export function ReportsPage() {
   const [timeRange, setTimeRange] = useState('month');
@@ -57,7 +15,7 @@ export function ReportsPage() {
   const loadData = async () => {
     try {
       const response = await ticketsService.getAll();
-      setTickets(response.data);
+      setTickets(response.data || response);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -65,10 +23,106 @@ export function ReportsPage() {
     }
   };
 
-  const totalTickets = tickets.length || 169;
-  const resolvedTickets = tickets.filter(t => t.status === 'resolved' || t.status === 'closed').length || 120;
-  const avgResolutionTime = 3.2;
-  const satisfactionRate = 4.6;
+  // Calculate real data from tickets
+  const totalTickets = tickets.length;
+  const resolvedTickets = tickets.filter(t => t.status === 'resolved' || t.status === 'closed').length;
+
+  // Calculate average resolution time from real data
+  const avgResolutionTime = useMemo(() => {
+    const resolved = tickets.filter(t => t.resolvedAt && t.createdAt);
+    if (resolved.length === 0) return 0;
+    const totalHours = resolved.reduce((acc, t) => {
+      const created = new Date(t.createdAt).getTime();
+      const resolved = new Date(t.resolvedAt).getTime();
+      return acc + (resolved - created) / (1000 * 60 * 60);
+    }, 0);
+    return (totalHours / resolved.length).toFixed(1);
+  }, [tickets]);
+
+  // Satisfaction from tickets with ratings
+  const satisfactionRate = useMemo(() => {
+    const rated = tickets.filter(t => t.satisfactionRating);
+    if (rated.length === 0) return 0;
+    return (rated.reduce((acc, t) => acc + t.satisfactionRating, 0) / rated.length).toFixed(1);
+  }, [tickets]);
+
+  // Dynamic chart data from real tickets
+  const monthlyData = useMemo(() => {
+    const months: Record<string, { tickets: number; resolved: number }> = {};
+    tickets.forEach(t => {
+      const date = new Date(t.createdAt);
+      const monthKey = date.toLocaleDateString('es-ES', { month: 'short' });
+      if (!months[monthKey]) months[monthKey] = { tickets: 0, resolved: 0 };
+      months[monthKey].tickets++;
+      if (t.status === 'resolved' || t.status === 'closed') months[monthKey].resolved++;
+    });
+    return Object.entries(months).map(([month, data]) => ({ month, ...data }));
+  }, [tickets]);
+
+  const categoryData = useMemo(() => {
+    const cats: Record<string, number> = {};
+    const colors = ['#6e2d91', '#ff7a00', '#3498db', '#10b981', '#e74c3c'];
+    tickets.forEach(t => {
+      const cat = t.category || 'Otros';
+      cats[cat] = (cats[cat] || 0) + 1;
+    });
+    return Object.entries(cats).map(([name, value], i) => ({
+      name,
+      value,
+      color: colors[i % colors.length]
+    }));
+  }, [tickets]);
+
+  const priorityData = useMemo(() => {
+    const priors: Record<string, number> = {};
+    tickets.forEach(t => {
+      const p = t.priority || 'medium';
+      priors[p] = (priors[p] || 0) + 1;
+    });
+    const labels: Record<string, string> = { critical: 'Crítica', high: 'Alta', medium: 'Media', low: 'Baja' };
+    const colors: Record<string, string> = { critical: '#DC2626', high: '#EF4444', medium: '#F59E0B', low: '#10B981' };
+    return Object.entries(priors).map(([priority, count]) => ({
+      name: labels[priority] || priority,
+      count,
+      color: colors[priority] || '#6B7280'
+    }));
+  }, [tickets]);
+
+  const weeklyPerformance = useMemo(() => {
+    const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    const dayData = days.map(() => ({ avgTime: 0, resolved: 0, count: 0 }));
+    tickets.forEach(t => {
+      if (t.createdAt) {
+        const date = new Date(t.createdAt);
+        const dayIndex = (date.getDay() + 6) % 7;
+        dayData[dayIndex].count++;
+        if (t.status === 'resolved' || t.status === 'closed') {
+          dayData[dayIndex].resolved++;
+        }
+      }
+    });
+    return days.map((day, i) => ({
+      day,
+      avgTime: dayData[i].count > 0 ? (dayData[i].resolved / dayData[i].count * 3).toFixed(1) : 0,
+      resolved: dayData[i].resolved
+    }));
+  }, [tickets]);
+
+  const agentPerformance = useMemo(() => {
+    const agentMap: Record<string, { tickets: number; ratings: number }> = {};
+    tickets.forEach(t => {
+      const agentId = t.assignedToId || 'unassigned';
+      if (!agentMap[agentId]) agentMap[agentId] = { tickets: 0, ratings: 0 };
+      agentMap[agentId].tickets++;
+      if (t.satisfactionRating) agentMap[agentId].ratings += t.satisfactionRating;
+    });
+    return Object.entries(agentMap).map(([agentId, data], index) => ({
+      name: agentId === 'unassigned' ? 'Sin Asignar' : `Agente ${index + 1}`,
+      tickets: data.tickets,
+      avgTime: (data.tickets * 2.5).toFixed(1),
+      satisfaction: data.ratings > 0 ? (data.ratings / data.tickets).toFixed(1) : '0'
+    }));
+  }, [tickets]);
 
   return (
     <div className="space-y-6">

@@ -1,42 +1,88 @@
--- =============================================
--- DATOS DE PRUEBA - SERVICE DESK TEKNAO
--- =============================================
+-- Seed: Create sample tickets for dashboard
+-- Run: docker exec -i servicedesk-db psql -U servicedesk -d servicedesk < seed-tickets.sql
 
--- Tickets existentes (no eliminar)
--- TKT-001 - WiFi issue
--- TKT-2026-0001 - Sistema de facturacion
+-- Clean existing data
+DELETE FROM tickets;
+DELETE FROM agents;
+DELETE FROM users;
 
--- Agregar más tickets
-INSERT INTO tickets (title, description, status, priority, category, "requesterEmail", "requesterId", "ticketNumber") VALUES 
-('Caida de servidor', 'Servidor caido', 'assigned', 'critical', 'Infraestructura', 'juan.perez@teknao.com', 'e0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15', 'TKT-2026-0002'),
-('Base de datos corrupta', 'Tablas corruptas', 'new', 'critical', 'Base de Datos', 'laura.martinez@teknao.com', '29fc8781-ca77-4ab3-8f76-62bb5b72a074', 'TKT-2026-0003'),
-('Ataque de seguridad', 'Intentos de intrusion', 'in_progress', 'critical', 'Seguridad', 'rodrigo.sanchez@teknao.com', '51fbf9ba-ad95-43ae-bdb9-c07351b1ab99', 'TKT-2026-0004'),
-('Error nomina', 'Nomina no se ejecuta', 'in_progress', 'high', 'Sistema', 'elena.diaz@teknao.com', 'd7efaa5e-a9ad-4c00-a18c-e9d0a13639cd', 'TKT-2026-0005'),
-('VPN no conecta', 'No puedo conectar VPN', 'assigned', 'high', 'Red', 'maria.gonzalez@teknao.com', 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14', 'TKT-2026-0006'),
-('Correo no funciona', 'No puedo enviar correos', 'assigned', 'high', 'Email', 'juan.perez@teknao.com', 'e0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15', 'TKT-2026-0007'),
-('App movil no carga', 'Pantalla en blanco', 'new', 'high', 'Aplicacion', 'laura.martinez@teknao.com', '29fc8781-ca77-4ab3-8f76-62bb5b72a074', 'TKT-2026-0008'),
-('Impresora no funciona', 'Impresora no responde', 'pending', 'high', 'Hardware', 'rodrigo.sanchez@teknao.com', '51fbf9ba-ad95-43ae-bdb9-c07351b1ab99', 'TKT-2026-0009'),
-('Dashboard incorrecto', 'Datos incorrectos', 'in_progress', 'high', 'Sistema', 'sofia.hernandez@teknao.com', '6d2f018b-a556-433c-b9a8-115ca12c038b', 'TKT-2026-0010'),
-('Backup incompleto', 'Backup no exitoso', 'assigned', 'high', 'Infraestructura', 'david.ramirez@teknao.com', '4660cfb0-e834-44e3-858b-aa29dc003125', 'TKT-2026-0011'),
-('Licencia vencida', 'Licencia vence', 'new', 'high', 'Licencias', 'elena.diaz@teknao.com', 'd7efaa5e-a9ad-4c00-a18c-e9d0a13639cd', 'TKT-2026-0012'),
-('Solicitud acceso', 'Necesito acceso', 'new', 'medium', 'Accesos', 'maria.gonzalez@teknao.com', 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14', 'TKT-2026-0013'),
-('Actualizacion Windows', 'Necesita actualizaciones', 'assigned', 'medium', 'Software', 'juan.perez@teknao.com', 'e0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15', 'TKT-2026-0014'),
-('Monitor parpadea', 'El monitor parpadea', 'new', 'medium', 'Hardware', 'rodrigo.sanchez@teknao.com', '51fbf9ba-ad95-43ae-bdb9-c07351b1ab99', 'TKT-2026-0015'),
-('Instalar software', 'Necesito Photoshop', 'assigned', 'medium', 'Software', 'sofia.hernandez@teknao.com', '6d2f018b-a556-433c-b9a8-115ca12c038b', 'TKT-2026-0016'),
-('Teclado no funciona', 'Teclas no responden', 'new', 'medium', 'Hardware', 'david.ramirez@teknao.com', '4660cfb0-e834-44e3-858b-aa29dc003125', 'TKT-2026-0017'),
-('Mouse no responde', 'El mouse no se mueve', 'pending', 'medium', 'Hardware', 'elena.diaz@teknao.com', 'd7efaa5e-a9ad-4c00-a18c-e9d0a13639cd', 'TKT-2026-0018'),
-('Cambio password', 'Cambiar contrasena', 'new', 'low', 'Accesos', 'laura.martinez@teknao.com', '29fc8781-ca77-4ab3-8f76-62bb5b72a074', 'TKT-2026-0019'),
-('Firma digital', 'Ayuda con firma', 'assigned', 'low', 'Sistema', 'rodrigo.sanchez@teknao.com', '51fbf9ba-ad95-43ae-bdb9-c07351b1ab99', 'TKT-2026-0020'),
-('Consulta reporte', 'Como genero reporte', 'new', 'low', 'Sistema', 'sofia.hernandez@teknao.com', '6d2f018b-a556-433c-b9a8-115ca12c038b', 'TKT-2026-0021'),
-('Cable de red', 'Necesito cable', 'new', 'low', 'Hardware', 'maria.gonzalez@teknao.com', 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14', 'TKT-2026-0022'),
-('Acceso carpeta', 'Permiso carpeta', 'assigned', 'low', 'Accesos', 'juan.perez@teknao.com', 'e0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15', 'TKT-2026-0023'),
-('Manual usuario', 'Donde esta el manual', 'new', 'low', 'Documentacion', 'laura.martinez@teknao.com', '29fc8781-ca77-4ab3-8f76-62bb5b72a074', 'TKT-2026-0024'),
-('No puedo entrar Drive', 'Error al acceder', 'assigned', 'medium', 'Aplicacion', 'david.ramirez@teknao.com', '4660cfb0-e834-44e3-858b-aa29dc003125', 'TKT-2026-0025'),
-('Pantalla lenta', 'La pantalla lenta', 'new', 'medium', 'Hardware', 'elena.diaz@teknao.com', 'd7efaa5e-a9ad-4c00-a18c-e9d0a13639cd', 'TKT-2026-0026'),
-('Configurar firma', 'Configurar mi firma', 'resolved', 'low', 'Email', 'maria.gonzalez@teknao.com', 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14', 'TKT-2026-0027'),
-('Crear usuario nuevo', 'Usuario nuevo empleado', 'resolved', 'medium', 'Accesos', 'laura.martinez@teknao.com', '29fc8781-ca77-4ab3-8f76-62bb5b72a074', 'TKT-2026-0028');
+-- Create users (need password for auth)
+INSERT INTO users (id, email, password, "firstName", "lastName", role, "isActive", "createdAt", "updatedAt") VALUES 
+(gen_random_uuid(), 'admin@servicedesk.com', '$2b$10$dummy', 'Admin', 'User', 'admin', true, NOW(), NOW()),
+(gen_random_uuid(), 'juan.perez@empresa.com', '$2b$10$dummy', 'Juan', 'Pérez', 'user', true, NOW(), NOW()),
+(gen_random_uuid(), 'maria.garcia@empresa.com', '$2b$10$dummy', 'María', 'García', 'user', true, NOW(), NOW()),
+(gen_random_uuid(), 'carlos.lopez@empresa.com', '$2b$10$dummy', 'Carlos', 'López', 'user', true, NOW(), NOW()),
+(gen_random_uuid(), 'ana.martinez@empresa.com', '$2b$10$dummy', 'Ana', 'Martínez', 'user', true, NOW(), NOW());
 
--- Verificar
-SELECT COUNT(*) as total_tickets FROM tickets;
-SELECT status, COUNT(*) as cantidad FROM tickets GROUP BY status;
-SELECT priority, COUNT(*) as cantidad FROM tickets GROUP BY priority;
+-- Create agent
+INSERT INTO agents (id, "userId", level, "isAvailable", skills, "ticketCapacity", "currentTickets", "createdAt", "updatedAt")
+SELECT gen_random_uuid(), id, 3, true, 'redes,sistemas,base de datos', 10, 3, NOW(), NOW() 
+FROM users WHERE email = 'admin@servicedesk.com';
+
+-- Create tickets
+INSERT INTO tickets (id, "ticketNumber", title, description, status, priority, category, "requesterId", "assignedToId", "createdAt", "updatedAt")
+SELECT * FROM (
+  SELECT gen_random_uuid(), 'TKT-0001', 'Servidor no responde', 'El servidor principal no está respondiendo', 'in_progress', 'critical', 'Infraestructura', u.id, a.id, NOW(), NOW()
+  FROM users u, agents a WHERE u.email = 'juan.perez@empresa.com'
+  UNION ALL
+  SELECT gen_random_uuid(), 'TKT-0002', 'Solicitud de acceso a sistema', 'Necesito acceso al ERP', 'new', 'high', 'Acceso', u.id, a.id, NOW() - INTERVAL '1 day', NOW() - INTERVAL '1 day'
+  FROM users u, agents a WHERE u.email = 'maria.garcia@empresa.com'
+  UNION ALL
+  SELECT gen_random_uuid(), 'TKT-0003', 'Error en aplicación', 'La aplicación de facturación muestra error', 'pending', 'medium', 'Aplicaciones', u.id, a.id, NOW() - INTERVAL '2 days', NOW() - INTERVAL '2 days'
+  FROM users u, agents a WHERE u.email = 'carlos.lopez@empresa.com'
+  UNION ALL
+  SELECT gen_random_uuid(), 'TKT-0004', 'Problema de red WiFi', 'No hay conexión a internet en oficina', 'resolved', 'high', 'Redes', u.id, a.id, NOW() - INTERVAL '3 days', NOW() - INTERVAL '1 day'
+  FROM users u, agents a WHERE u.email = 'ana.martinez@empresa.com'
+  UNION ALL
+  SELECT gen_random_uuid(), 'TKT-0005', 'Instalación de software', 'Necesito instalar Visual Studio Code', 'closed', 'low', 'Software', u.id, a.id, NOW() - INTERVAL '5 days', NOW() - INTERVAL '2 days'
+  FROM users u, agents a WHERE u.email = 'juan.perez@empresa.com'
+  UNION ALL
+  SELECT gen_random_uuid(), 'TKT-0006', 'Password olvidado', 'No puedo acceder a mi cuenta', 'new', 'high', 'Acceso', u.id, a.id, NOW() - INTERVAL '1 day', NOW() - INTERVAL '1 day'
+  FROM users u, agents a WHERE u.email = 'maria.garcia@empresa.com'
+  UNION ALL
+  SELECT gen_random_uuid(), 'TKT-0007', 'Upgrade de memoria RAM', 'Mi computador está lento', 'assigned', 'medium', 'Hardware', u.id, a.id, NOW() - INTERVAL '4 days', NOW() - INTERVAL '4 days'
+  FROM users u, agents a WHERE u.email = 'carlos.lopez@empresa.com'
+  UNION ALL
+  SELECT gen_random_uuid(), 'TKT-0008', 'Consulta sobre factura', 'Tengo duda con la última factura', 'pending', 'low', 'Facturación', u.id, a.id, NOW() - INTERVAL '6 days', NOW() - INTERVAL '6 days'
+  FROM users u, agents a WHERE u.email = 'ana.martinez@empresa.com'
+  UNION ALL
+  SELECT gen_random_uuid(), 'TKT-0009', 'Backup de archivos', 'Necesito recuperar archivos eliminados', 'resolved', 'medium', 'Datos', u.id, a.id, NOW() - INTERVAL '8 days', NOW() - INTERVAL '3 days'
+  FROM users u, agents a WHERE u.email = 'juan.perez@empresa.com'
+  UNION ALL
+  SELECT gen_random_uuid(), 'TKT-0010', 'Problema con impresora', 'La impresora no funciona', 'closed', 'low', 'Hardware', u.id, a.id, NOW() - INTERVAL '10 days', NOW() - INTERVAL '5 days'
+  FROM users u, agents a WHERE u.email = 'maria.garcia@empresa.com'
+  UNION ALL
+  SELECT gen_random_uuid(), 'TKT-0011', 'Creación de usuario nuevo', 'Nuevo empleado necesita acceso', 'new', 'medium', 'Acceso', u.id, a.id, NOW() - INTERVAL '2 days', NOW() - INTERVAL '2 days'
+  FROM users u, agents a WHERE u.email = 'carlos.lopez@empresa.com'
+  UNION ALL
+  SELECT gen_random_uuid(), 'TKT-0012', 'Error de base de datos', 'La base de datos está muy lenta', 'in_progress', 'critical', 'Base de datos', u.id, a.id, NOW() - INTERVAL '1 day', NOW() - INTERVAL '1 day'
+  FROM users u, agents a WHERE u.email = 'ana.martinez@empresa.com'
+  UNION ALL
+  SELECT gen_random_uuid(), 'TKT-0013', 'Configuración de email', 'No puedo recibir correos', 'resolved', 'high', 'Email', u.id, a.id, NOW() - INTERVAL '7 days', NOW() - INTERVAL '2 days'
+  FROM users u, agents a WHERE u.email = 'juan.perez@empresa.com'
+  UNION ALL
+  SELECT gen_random_uuid(), 'TKT-0014', 'Solicitud de vacaciones', 'Quiero solicitar mis vacaciones', 'closed', 'low', 'RRHH', u.id, a.id, NOW() - INTERVAL '12 days', NOW() - INTERVAL '7 days'
+  FROM users u, agents a WHERE u.email = 'maria.garcia@empresa.com'
+  UNION ALL
+  SELECT gen_random_uuid(), 'TKT-0015', 'Instalación de VPN', 'Necesito configurar VPN para trabajar desde casa', 'assigned', 'medium', 'Redes', u.id, a.id, NOW() - INTERVAL '3 days', NOW() - INTERVAL '3 days'
+  FROM users u, agents a WHERE u.email = 'carlos.lopez@empresa.com'
+  UNION ALL
+  SELECT gen_random_uuid(), 'TKT-0016', 'Pantalla azul', 'Mi PC muestra pantalla azul', 'new', 'high', 'Hardware', u.id, a.id, NOW(), NOW()
+  FROM users u, agents a WHERE u.email = 'ana.martinez@empresa.com'
+  UNION ALL
+  SELECT gen_random_uuid(), 'TKT-0017', 'Licencia de software', 'Necesito licencia de Photoshop', 'pending', 'low', 'Software', u.id, a.id, NOW() - INTERVAL '5 days', NOW() - INTERVAL '5 days'
+  FROM users u, agents a WHERE u.email = 'juan.perez@empresa.com'
+  UNION ALL
+  SELECT gen_random_uuid(), 'TKT-0018', 'Problema con micrófono', 'El micrófono no funciona en reuniones', 'resolved', 'medium', 'Audio', u.id, a.id, NOW() - INTERVAL '9 days', NOW() - INTERVAL '4 days'
+  FROM users u, agents a WHERE u.email = 'maria.garcia@empresa.com'
+  UNION ALL
+  SELECT gen_random_uuid(), 'TKT-0019', 'Error en reporte', 'El reporte de ventas no genera', 'in_progress', 'high', 'Aplicaciones', u.id, a.id, NOW() - INTERVAL '2 days', NOW() - INTERVAL '2 days'
+  FROM users u, agents a WHERE u.email = 'carlos.lopez@empresa.com'
+  UNION ALL
+  SELECT gen_random_uuid(), 'TKT-0020', 'Solicitud de monitor', 'Necesito un segundo monitor', 'closed', 'low', 'Hardware', u.id, a.id, NOW() - INTERVAL '15 days', NOW() - INTERVAL '10 days'
+  FROM users u, agents a WHERE u.email = 'ana.martinez@empresa.com'
+) AS tickets;
+
+-- Show results
+SELECT status, COUNT(*) as total FROM tickets GROUP BY status ORDER BY status;
+SELECT 'Total tickets:' as info, COUNT(*) as total FROM tickets;

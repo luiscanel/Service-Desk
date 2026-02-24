@@ -1,25 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from 'recharts';
 import { ticketsService, authService } from '../../services/api';
 import { Card, CardHeader, CardBody, Button, StatCard } from '../../components/ui';
-
-const ticketsByStatus = [
-  { name: 'Abiertos', value: 45, color: '#3B82F6' },
-  { name: 'En Progreso', value: 23, color: '#F59E0B' },
-  { name: 'Cerrados', value: 89, color: '#10B981' },
-  { name: 'Pendientes', value: 12, color: '#EF4444' },
-];
-
-const weeklyData = [
-  { day: 'Lun', tickets: 12 },
-  { day: 'Mar', tickets: 19 },
-  { day: 'Mié', tickets: 15 },
-  { day: 'Jue', tickets: 22 },
-  { day: 'Vie', tickets: 18 },
-  { day: 'Sáb', tickets: 8 },
-  { day: 'Dom', tickets: 5 },
-];
 
 export function DashboardPage() {
   const navigate = useNavigate();
@@ -39,7 +22,7 @@ export function DashboardPage() {
         ticketsService.getAll(),
         fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/tickets/stats/satisfaction`).then(r => r.json()).catch(() => null)
       ]);
-      setTickets(ticketsRes.data);
+      setTickets(ticketsRes.data || ticketsRes);
       setSatisfaction(satRes);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -47,6 +30,51 @@ export function DashboardPage() {
       setLoading(false);
     }
   };
+
+  // Calculate real data from tickets
+  const ticketsByStatus = useMemo(() => {
+    const statusMap: Record<string, number> = {};
+    tickets.forEach(t => {
+      const status = t.status || 'unknown';
+      statusMap[status] = (statusMap[status] || 0) + 1;
+    });
+    const statusLabels: Record<string, string> = {
+      'new': 'Nuevos',
+      'assigned': 'Asignados',
+      'in_progress': 'En Progreso',
+      'pending': 'Pendientes',
+      'resolved': 'Resueltos',
+      'closed': 'Cerrados'
+    };
+    const colors: Record<string, string> = {
+      'new': '#3498db',
+      'assigned': '#9b59b6',
+      'in_progress': '#f39c12',
+      'pending': '#e74c3c',
+      'resolved': '#2ecc71',
+      'closed': '#95a5a6'
+    };
+    return Object.entries(statusMap).map(([status, value]) => ({
+      name: statusLabels[status] || status,
+      value,
+      color: colors[status] || '#95a5a6'
+    }));
+  }, [tickets]);
+
+  const weeklyData = useMemo(() => {
+    const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    const dayCounts = days.map(() => 0);
+    
+    tickets.forEach(t => {
+      if (t.createdAt) {
+        const date = new Date(t.createdAt);
+        const dayIndex = (date.getDay() + 6) % 7; // Monday = 0
+        dayCounts[dayIndex]++;
+      }
+    });
+    
+    return days.map((day, i) => ({ day, tickets: dayCounts[i] }));
+  }, [tickets]);
 
   const openTickets = tickets.filter(t => t.status === 'new' || t.status === 'in_progress').length;
   const closedTickets = tickets.filter(t => t.status === 'closed' || t.status === 'resolved').length;
@@ -58,7 +86,7 @@ export function DashboardPage() {
       <div className="flex items-center justify-between">
         <div className="animate-fade-in-up">
           <h1 className="text-3xl font-bold text-slate-800">Dashboard</h1>
-          <p className="text-slate-500 mt-1">Bienvenido de nuevo, <span className="font-semibold text-blue-600">{user?.firstName || 'Usuario'}</span></p>
+          <p className="text-slate-500 mt-1">Bienvenido de nuevo, <span className="font-semibold text-primary">{user?.firstName || 'Usuario'}</span></p>
         </div>
         <Button onClick={() => navigate('/tickets')} className="animate-fade-in-up delay-100">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -171,8 +199,8 @@ export function DashboardPage() {
                 <AreaChart data={weeklyData}>
                   <defs>
                     <linearGradient id="colorTickets" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#6e2d91" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#6e2d91" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
@@ -186,7 +214,7 @@ export function DashboardPage() {
                       boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
                     }}
                   />
-                  <Area type="monotone" dataKey="tickets" stroke="#3B82F6" strokeWidth={3} fill="url(#colorTickets)" />
+                  <Area type="monotone" dataKey="tickets" stroke="#6e2d91" strokeWidth={3} fill="url(#colorTickets)" />
                 </AreaChart>
               </ResponsiveContainer>
             </CardBody>
@@ -258,7 +286,7 @@ export function DashboardPage() {
                       boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
                     }}
                   />
-                  <Bar dataKey="count" fill="#3B82F6" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="count" fill="#6e2d91" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardBody>
@@ -278,7 +306,7 @@ export function DashboardPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-gradient-to-r from-slate-50 to-blue-50">
+                <tr className="bg-gradient-to-r from-slate-50 to-primary-50/30">
                   <th className="text-left py-4 px-6 text-sm font-bold text-slate-600">ID</th>
                   <th className="text-left py-4 px-6 text-sm font-bold text-slate-600">Título</th>
                   <th className="text-left py-4 px-6 text-sm font-bold text-slate-600">Estado</th>
@@ -288,9 +316,9 @@ export function DashboardPage() {
               </thead>
               <tbody>
                 {tickets.slice(0, 5).map((ticket) => (
-                  <tr key={ticket.id} className="border-b border-slate-50 hover:bg-blue-50/30 transition-colors">
+                  <tr key={ticket.id} className="border-b border-slate-50 hover:bg-primary-50/30 transition-colors">
                     <td className="py-4 px-6">
-                      <span className="font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">{ticket.ticketNumber}</span>
+                      <span className="font-bold text-primary bg-primary/10 px-3 py-1 rounded-lg">{ticket.ticketNumber}</span>
                     </td>
                     <td className="py-4 px-6">
                       <div className="font-medium text-slate-800">{ticket.title}</div>
