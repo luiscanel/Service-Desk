@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { Layout } from './components/layout';
 import { LoginPage } from './pages/auth/LoginPage';
+import { PortalPage } from './pages/portal/PortalPage';
 import { DashboardPage } from './pages/dashboard/DashboardPage';
 import { TicketsPage } from './pages/tickets/TicketsPage';
 import { UsersPage } from './pages/users/UsersPage';
@@ -34,6 +35,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/portal" element={<PortalPage />} />
           <Route element={<PrivateRoute />}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<DashboardPage />} />

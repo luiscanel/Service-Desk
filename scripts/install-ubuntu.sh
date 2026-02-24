@@ -38,7 +38,13 @@ sudo -u postgres psql -c "CREATE USER servicedesk WITH PASSWORD 'ChangeMe123';" 
 sudo -u postgres psql -c "CREATE DATABASE servicedesk OWNER servicedesk;" 2>/dev/null || true
 sudo -u postgres psql -c "ALTER USER servicedesk CREATEDB;" 2>/dev/null || true
 
-echo -e "${GREEN}  ✓ PostgreSQL instalado${NC}"
+# Importar esquema de base de datos
+sudo -u postgres psql -d servicedesk -f /var/www/servicedesk/scripts/init-db.sql 2>/dev/null || true
+
+# Opcional: Cargar datos de ejemplo (comenta si no quieres)
+# sudo -u postgres psql -d servicedesk -f /var/www/servicedesk/scripts/seed-test.sql 2>/dev/null || true
+
+echo -e "${GREEN}  ✓ Base de datos creada${NC}"
 
 # ============================================
 # 3. Instalar Redis

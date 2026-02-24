@@ -18,6 +18,18 @@ export function Navbar() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem('darkMode') === 'true';
+  });
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('darkMode', String(darkMode));
+  }, [darkMode]);
 
   useEffect(() => {
     const currentUser = authService.getCurrentUser();
@@ -61,6 +73,15 @@ export function Navbar() {
       </div>
 
       <div className="flex items-center gap-2">
+        {/* Dark Mode Toggle */}
+        <button 
+          onClick={() => setDarkMode(!darkMode)}
+          className="p-3 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-all duration-300"
+          title={darkMode ? 'Modo claro' : 'Modo oscuro'}
+        >
+          <span className="text-xl">{darkMode ? '☀️' : '🌙'}</span>
+        </button>
+
         {/* Notifications */}
         <div className="relative">
           <button 

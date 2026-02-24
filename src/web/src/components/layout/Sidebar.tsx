@@ -67,6 +67,11 @@ const menuItems = [
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
     </svg>
   )},
+  { path: '/portal', label: 'Portal Público', icon: (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+    </svg>
+  ), external: true },
 ];
 
 export function Sidebar() {
@@ -90,7 +95,26 @@ export function Sidebar() {
       </div>
       
       <nav className="relative z-10 flex-1 p-4 space-y-1 overflow-y-auto">
-        {menuItems.map((item) => (
+        {menuItems.map((item) => {
+          if (item.external) {
+            return (
+              <a
+                key={item.path}
+                href={item.path}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 group relative overflow-hidden text-slate-400 hover:bg-slate-800/80 hover:text-white"
+              >
+                <span className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                <span className="transition-transform duration-300 group-hover:scale-110">
+                  {item.icon}
+                </span>
+                <span className="font-medium relative z-10">{item.label}</span>
+                <span className="ml-auto text-xs">↗</span>
+              </a>
+            );
+          }
+          return (
           <NavLink
             key={item.path}
             to={item.path}
@@ -111,7 +135,8 @@ export function Sidebar() {
               →
             </span>
           </NavLink>
-        ))}
+          );
+        })}
       </nav>
 
       <div className="relative z-10 p-4 border-t border-slate-700/50">

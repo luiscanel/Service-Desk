@@ -352,4 +352,91 @@ export class TicketsService {
 
     return result;
   }
+
+  // === Métodos para Portal Público ===
+  
+  async createPublic(dto: CreateTicketDto): Promise<Ticket> {
+    // Generar número de ticket
+    const count = await this.ticketRepository.count();
+    const year = new Date().getFullYear();
+    const ticketNumber = `TKT-${year}-${String(count + 1).padStart(4, '0')}`;
+    
+    const ticket = this.ticketRepository.create({
+      ...dto,
+      ticketNumber,
+      status: TicketStatus.NEW,
+    });
+    
+    // Aplicar SLA
+    const slaDeadline = await this.slaService.applySlaToTicket(ticket);
+    if (slaDeadline) {
+      ticket.slaDeadline = slaDeadline;
+    }
+    
+    const savedTicket = await this.ticketRepository.save(ticket);
+    
+    // Auto-asignar si hay agente disponible
+    if (!savedTicket.assignedToId) {
+      const assignedAgent = await this.autoAssignmentService.assignTicket(savedTicket);
+      if (assignedAgent) {
+        savedTicket.assignedToId = assignedAgent.id;
+        savedTicket.status = TicketStatus.ASSIGNED;
+        savedTicket.assignedAt = new Date();
+        await this.ticketRepository.save(savedTicket);
+      }
+    }
+    
+    // Notificar
+    this.notificationsGateway.emitNewTicket(savedTicket);
+    
+    // Enviar email de confirmación
+    if (savedTicket.requesterEmail) {
+      try {
+        await this.emailService.sendEmail({
+          to: savedTicket.requesterEmail,
+          subject: `Ticket creado: ${savedTicket.ticketNumber}`,
+          html: EMAIL_TEMPLATES.ticketCreated(savedTicket),
+        });
+      } catch (error) {
+        this.logger.error('Error sending confirmation email', error);
+      }
+    }
+    
+    return savedTicket;
+  }
+
+  async findByTicketNumber(ticketNumber: string): Promise<Ticket> {
+    const ticket = await this.ticketRepository.findOne({ 
+      where: { ticketNumber } 
+    });
+    if (!ticket) {
+      throw new NotFoundException(`Ticket ${ticketNumber} no encontrado`);
+    }
+    return ticket;
+  }
+
+  async addPublicComment(ticketNumber: string, comment: string, email: string): Promise<any> {
+    const ticket = await this.findByTicketNumber(ticketNumber);
+    
+    // Verificar que el email coincida con el solicitante
+    if (ticket.requesterEmail !== email) {
+      return { success: false, message: 'El correo no coincide con el ticket' };
+    }
+    
+    // Agregar comentario interno
+    const currentComments = ticket.internalComments || '';
+    const newComment = `\n[${new Date().toLocaleString()}] ${comment}`;
+    
+    ticket.internalComments = currentComments + newComment;
+    ticket.updatedAt = new Date();
+    
+    await this.ticketRepository.save(ticket);
+    
+    // Notificar al agente asignado
+    if (ticket.assignedToId) {
+      this.notificationsGateway.emitTicketUpdated(ticket);
+    }
+    
+    return { success: true, message: 'Comentario agregado' };
+  }
 }
