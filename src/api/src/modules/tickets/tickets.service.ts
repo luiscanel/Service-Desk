@@ -7,6 +7,8 @@ import { SlaService } from '../sla/sla.service';
 import { AutoAssignmentService } from '../auto-assignment/auto-assignment.service';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
 import { GamificationService } from '../gamification/gamification.service';
+import { WorkflowsService } from '../workflows/workflows.service';
+import { WorkflowTrigger } from '../workflows/entities/workflow.entity';
 import { EMAIL_TEMPLATES } from '../../common/constants';
 import { CreateTicketDto, UpdateTicketDto, SurveyResponseDto } from './dto/ticket.dto';
 
@@ -22,6 +24,7 @@ export class TicketsService {
     private readonly autoAssignmentService: AutoAssignmentService,
     private readonly notificationsGateway: NotificationsGateway,
     private readonly gamificationService: GamificationService,
+    private readonly workflowsService: WorkflowsService,
   ) {}
 
   async findAll(): Promise<Ticket[]> {
@@ -81,6 +84,12 @@ export class TicketsService {
       await this.emailService.sendTicketCreated(savedTicket.requesterEmail, savedTicket);
     }
     
+    // Execute workflows - ticket created
+    this.workflowsService.executeWorkflow(WorkflowTrigger.TICKET_CREATED, {
+      ticketId: savedTicket.id,
+      ticket: savedTicket,
+    }).catch(err => this.logger.error('Workflow error:', err));
+    
     return this.findOne(savedTicket.id);
   }
 
@@ -100,6 +109,33 @@ export class TicketsService {
     // Update agent workload when assigned
     if (dto.assignedToId && dto.assignedToId !== ticket.assignedToId) {
       await this.autoAssignmentService.updateAgentWorkload(dto.assignedToId);
+      
+      // Execute workflows - ticket assigned
+      this.workflowsService.executeWorkflow(WorkflowTrigger.TICKET_ASSIGNED, {
+        ticketId: ticket.id,
+        ticket: updatedTicket,
+        agentId: dto.assignedToId,
+      }).catch(err => this.logger.error('Workflow error:', err));
+    }
+    
+    // Execute workflows - status changed
+    if (dto.status && dto.status !== oldStatus) {
+      this.workflowsService.executeWorkflow(WorkflowTrigger.TICKET_STATUS_CHANGED, {
+        ticketId: ticket.id,
+        ticket: updatedTicket,
+        oldStatus,
+        newStatus: dto.status,
+      }).catch(err => this.logger.error('Workflow error:', err));
+    }
+    
+    // Execute workflows - priority changed
+    if (dto.priority && dto.priority !== ticket.priority) {
+      this.workflowsService.executeWorkflow(WorkflowTrigger.TICKET_PRIORITY_CHANGED, {
+        ticketId: ticket.id,
+        ticket: updatedTicket,
+        oldPriority: ticket.priority,
+        newPriority: dto.priority,
+      }).catch(err => this.logger.error('Workflow error:', err));
     }
     
     // Notify via WebSocket
