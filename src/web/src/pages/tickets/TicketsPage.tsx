@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ticketsService } from '../../services/api';
 import { Card, CardBody, Button, Input, Select, Modal } from '../../components/ui';
+import { TicketAttachments } from '../../components/TicketAttachments';
 
 interface Ticket {
   id: string;
