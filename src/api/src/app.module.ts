@@ -41,11 +41,7 @@ import { AgentStats, Achievement, AchievementUnlock } from './modules/gamificati
     // ]),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DATABASE_HOST || 'postgres',
-      port: 5432,
-      username: 'servicedesk',
-      password: 'ChangeMe123',
-      database: 'servicedesk',
+      url: process.env.DATABASE_URL || 'postgresql://servicedesk:ChangeMe123@postgres:5432/servicedesk',
       entities: [Ticket, User, Agent, Setting, Macro, SlaPolicy, AuditLog, ScheduledReport, KnowledgeArticle, AgentStats, Achievement, AchievementUnlock],
       synchronize: true,
       migrationsRun: true,

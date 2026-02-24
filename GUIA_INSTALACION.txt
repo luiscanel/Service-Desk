@@ -1,0 +1,190 @@
+================================================================================
+                  SERVICE DESK - GUÍA DE INSTALACIÓN COMPLETA
+================================================================================
+
+Este documento contiene todas las instrucciones para levantar el proyecto 
+Service Desk desde cero en un nuevo servidor.
+
+================================================================================
+                            REQUISITOS PREVIOS
+================================================================================
+
+- Docker Desktop instalado y corriendo
+- Docker Compose instalado
+- Puerto 80, 443, 3000, 5432, 6379 disponibles
+
+================================================================================
+                         ESTRUCTURA DEL PROYECTO
+================================================================================
+
+Service_Desk/
+├── docker/
+│   ├── docker-compose.yml
+│   ├── nginx/
+│   │   └── nginx.conf
+│   └── .env                    (copiar de .env.example)
+├── src/
+│   ├── api/                    (Backend NestJS)
+│   └── web/                    (Frontend React + Vite)
+├── scripts/
+│   └── init-db.sql
+├── .env                        (variables de entorno)
+├── QUICKSTART.md
+└── README.md
+
+================================================================================
+                        PASOS DE INSTALACIÓN
+================================================================================
+
+1. COPIAR EL PROYECTO
+   Copiar toda la carpeta Service_Desk al nuevo servidor.
+
+2. CREAR ARCHIVO .env
+   Copiar .env.example a .env y configurar:
+
+   --- .env ---
+   NODE_ENV=development
+   
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_USERNAME=servicedesk
+   DB_PASSWORD=Serv1ceD3sk2026!
+   DB_DATABASE=servicedesk
+   
+   REDIS_HOST=localhost
+   REDIS_PORT=6379
+   REDIS_PASSWORD=RedisP@ss2026!
+   
+   API_PORT=3000
+   JWT_SECRET=ServiceDeskJWTSecretKey2026Secure!
+   JWT_EXPIRES_IN=24h
+   
+   CORS_ORIGIN=http://localhost,http://localhost:5173
+   
+   VITE_API_URL=/api
+   VITE_APP_TITLE=Service Desk
+   --- fin ---
+
+3. COPIAR .env A DOCKER
+   cp .env docker/.env
+
+4. LEVANTAR CONTENEDORES
+   cd docker
+   docker-compose up -d
+
+5. VERIFICAR QUE TODO ESTÉ CORRIENDO
+   docker ps
+
+   Debe mostrar:
+   - servicedesk-nginx    (puertos 80, 443)
+   - servicedesk-web       (puerto 80)
+   - servicedesk-api      (puerto 3000)
+   - servicedesk-db      (puerto 5432)
+   - servicedesk-redis   (puerto 6379)
+
+6. ACCEDER A LA APLICACIÓN
+   - Frontend: http://localhost
+   - API: http://localhost:3000
+   - Swagger: http://localhost:3000/api/docs
+
+================================================================================
+                         CREDENCIAS DE PRUEBA
+================================================================================
+
+Después de levantar, registrar un usuario nuevo desde:
+- Swagger: POST /api/auth/register
+- Frontend: http://localhost/login
+
+O usar curl:
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@test.com","password":"test123","firstName":"Admin","lastName":"User"}'
+
+================================================================================
+                    COMANDOS ÚTILES
+================================================================================
+
+# Ver logs de un contenedor específico
+docker logs -f servicedesk-api
+docker logs -f servicedesk-web
+docker logs -f servicedesk-nginx
+
+# Reiniciar un servicio
+docker-compose restart api
+docker-compose restart web
+
+# Parar todos los contenedores
+docker-compose down
+
+# Borrar todo (incluyendo volúmenes)
+docker-compose down -v
+
+# Rebuild completo (sin caché)
+docker-compose build --no-cache
+docker-compose up -d
+
+# Ver estado de contenedores
+docker-compose ps
+
+# Acceder a la base de datos
+docker exec -it servicedesk-db psql -U servicedesk -d servicedesk
+
+# Acceder a Redis
+docker exec -it servicedesk-redis redis-cli
+
+================================================================================
+                    PROBLEMAS COMUNES Y SOLUCIONES
+================================================================================
+
+1. "Connection refused" en puerto 80
+   - Verificar que Docker Desktop esté corriendo
+   - Ver puertos: netstat -an | findstr ":80 "
+
+2. Frontend no carga (pantalla negra)
+   - Verificar que web y nginx estén corriendo: docker ps
+   - Ver logs: docker logs servicedesk-nginx
+   - Reiniciar: docker-compose restart nginx
+
+3. API no responde
+   - Ver logs: docker logs servicedesk-api
+   - Verificar base de datos: docker logs servicedesk-db
+
+4. Error 404 en /api/notifications
+   - Ya está corregido en el código. Rebuild completo si persiste.
+
+5. Frontend no conecta a API
+   - Verificar VITE_API_URL=/api en .env
+   - Rebuild del web: docker-compose build web
+
+================================================================================
+                    NOTAS IMPORTANTES
+================================================================================
+
+- La primera vez que levantas tardará más (descarga de imágenes)
+- El Rate Limiting está HABILITADO (100 req/min)
+- Swagger solo está disponible en modo development
+- La base de datos se crea automáticamente con synchronize:true
+- Los usuarios se crean vía API, no hay seed por defecto
+
+================================================================================
+                    CONSTRUIDO CON
+================================================================================
+
+Backend:
+- NestJS 10.0
+- TypeORM
+- PostgreSQL 15
+- Redis 7
+- JWT Authentication
+- WebSockets (Socket.io)
+
+Frontend:
+- React 19
+- Vite 7
+- TailwindCSS 3.4
+- Recharts
+- React Router DOM 7
+
+================================================================================
+                              FIN
+================================================================================

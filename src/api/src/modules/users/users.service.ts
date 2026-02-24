@@ -1,17 +1,39 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
-import { User } from './entities/user.entity';
+import { User, UserRole } from './entities/user.entity';
 
 @Injectable()
-export class UsersService {
+export class UsersService implements OnModuleInit {
+  private readonly logger = new Logger(UsersService.name);
   private readonly SALT_ROUNDS = 10;
 
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
   ) {}
+
+  async onModuleInit() {
+    await this.seedDefaultAdmin();
+  }
+
+  private async seedDefaultAdmin() {
+    const adminEmail = 'admin@teknao.com.gt';
+    const existingAdmin = await this.findByEmail(adminEmail);
+    
+    if (!existingAdmin) {
+      const hashedPassword = await bcrypt.hash('password123', this.SALT_ROUNDS);
+      await this.userRepository.save({
+        email: adminEmail,
+        password: hashedPassword,
+        firstName: 'Admin',
+        lastName: 'Teknao',
+        role: UserRole.ADMIN,
+      });
+      this.logger.log('Default admin user created: admin@teknao.com.gt');
+    }
+  }
 
   async findAll(): Promise<User[]> {
     return this.userRepository.find();
