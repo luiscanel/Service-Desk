@@ -90,6 +90,9 @@ export class Ticket {
   @Column({ type: 'jsonb', nullable: true })
   internalNotes: any[]
 
+  @Column({ type: 'text', nullable: true })
+  internalComments: string
+
   @Column({ nullable: true })
   clientRating: number
 

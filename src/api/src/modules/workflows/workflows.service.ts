@@ -93,16 +93,16 @@ export class WorkflowsService {
         switch (action.action) {
           case WorkflowAction.ASSIGN_AGENT:
             if (action.config.agentId) {
-              await this.ticketsService.assignAgent(context.ticketId, action.config.agentId);
+              await this.ticketsService.update(context.ticketId, { assignedToId: action.config.agentId });
             }
             break;
 
           case WorkflowAction.SET_STATUS:
-            await this.ticketsService.updateStatus(context.ticketId, action.config.status);
+            await this.ticketsService.update(context.ticketId, { status: action.config.status });
             break;
 
           case WorkflowAction.SET_PRIORITY:
-            await this.ticketsService.updatePriority(context.ticketId, action.config.priority);
+            await this.ticketsService.update(context.ticketId, { priority: action.config.priority });
             break;
 
           case WorkflowAction.SEND_EMAIL:
@@ -114,17 +114,18 @@ export class WorkflowsService {
             break;
 
           case WorkflowAction.NOTIFY_AGENT:
-            if (context.agentId) {
-              this.notificationsGateway.emitToUser(context.agentId, {
-                type: 'workflow',
-                title: action.config.title || 'Notificación de Workflow',
-                message: action.config.message,
-              });
-            }
+            // Emitir notificación general
+            this.notificationsGateway.emitNewTicket({
+              id: context.ticketId,
+              title: action.config.title || 'Notificación de Workflow',
+              message: action.config.message,
+            } as any);
             break;
 
           case WorkflowAction.ESCALATE:
-            await this.ticketsService.escalateTicket(context.ticketId, action.config.level);
+            await this.ticketsService.update(context.ticketId, { 
+              priority: action.config.level === 'high' ? 'high' : 'critical' as any 
+            });
             break;
 
           default:

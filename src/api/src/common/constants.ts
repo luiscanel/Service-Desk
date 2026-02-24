@@ -1,6 +1,19 @@
 // Plantillas de email para el sistema
 
 export const EMAIL_TEMPLATES = {
+  ticketCreated: (ticket: any) => `
+    <div style="font-family: Arial, max-width: 600px;">
+      <h2>✅ Ticket Creado</h2>
+      <p>Tu ticket ha sido creado exitosamente.</p>
+      <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <p><strong>Ticket:</strong> ${ticket.ticketNumber}</p>
+        <p><strong>Título:</strong> ${ticket.title}</p>
+        <p><strong>Estado:</strong> Nuevo</p>
+      </div>
+      <p>Nuestro equipo revisará tu solicitud pronto.</p>
+    </div>
+  `,
+
   satisfactionSurvey: (ticket: { ticketNumber: string; title: string; category?: string }) => `
     <div style="font-family: Arial, max-width: 600px;">
       <h2>¡Gracias por contactarnos!</h2>
