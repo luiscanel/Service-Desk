@@ -10,18 +10,15 @@ export class AuditLog {
   id: string;
 
   @Column()
-  @Index('idx_audit_action')
   action: string;
 
   @Column()
-  @Index('idx_audit_entity')
   entity: string;
 
   @Column({ nullable: true })
   entityId: string;
 
   @Column({ nullable: true })
-  @Index('idx_audit_userId')
   userId: string;
 
   @Column({ nullable: true })
@@ -40,6 +37,5 @@ export class AuditLog {
   userAgent: string;
 
   @CreateDateColumn()
-  @Index('idx_audit_createdAt')
   createdAt: Date;
 }

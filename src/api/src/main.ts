@@ -12,17 +12,17 @@ async function bootstrap() {
   // ============================================
   // SEGURIDAD - Helmet (Headers seguros)
   // ============================================
-  app.use(helmet())
+  // Deshabilitado para pruebas
+  // app.use(helmet())
 
   // ============================================
-  // CORS - Configuración restrictiva
+  // CORS - Configuración más permisiva para pruebas
   // ============================================
-  const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173'
   app.enableCors({
-    origin: corsOrigin.split(','), // Array de orígenes permitidos
+    origin: '*', // Permitir todos los orígenes
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', '*'],
   })
 
   // ============================================

@@ -33,7 +33,6 @@ export class ScheduledReport {
   filters: any;
 
   @Column({ default: true })
-  @Index('idx_reports_isActive')
   isActive: boolean;
 
   @Column({ nullable: true })
@@ -43,7 +42,6 @@ export class ScheduledReport {
   lastRunAt: Date;
 
   @Column({ nullable: true })
-  @Index('idx_reports_nextRunAt')
   nextRunAt: Date;
 
   @CreateDateColumn()

@@ -18,7 +18,6 @@ export enum UserPlan {
 
 @Entity('users')
 @Index('idx_users_email', ['email'], { unique: true })
-@Index('idx_users_isActive', ['isActive'])
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -42,7 +41,6 @@ export class User {
   plan: UserPlan;
 
   @Column({ default: true })
-  @Index('idx_users_isActive')
   isActive: boolean;
 
   @Column({ nullable: true })

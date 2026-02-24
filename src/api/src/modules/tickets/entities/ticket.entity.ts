@@ -31,7 +31,6 @@ export class Ticket {
   id: string
 
   @Column({ unique: true })
-  @Index('idx_tickets_ticketNumber')
   ticketNumber: string
 
   @Column()
@@ -41,18 +40,15 @@ export class Ticket {
   description: string
 
   @Column({ type: 'enum', enum: TicketStatus, default: TicketStatus.NEW })
-  @Index('idx_tickets_status')
   status: TicketStatus
 
   @Column({ type: 'enum', enum: TicketPriority, default: TicketPriority.MEDIUM })
-  @Index('idx_tickets_priority')
   priority: TicketPriority
 
   @Column({ nullable: true })
   category: string
 
   @Column({ nullable: true })
-  @Index('idx_tickets_assignedToId')
   assignedToId: string
 
   @ManyToOne(() => Agent, { onDelete: 'SET NULL', nullable: true })
@@ -60,7 +56,6 @@ export class Ticket {
   assignedTo: Agent;
 
   @Column({ nullable: true })
-  @Index('idx_tickets_requesterId')
   requesterId: string
 
   @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
@@ -71,7 +66,6 @@ export class Ticket {
   requesterEmail: string
 
   @Column({ type: 'timestamp', nullable: true })
-  @Index('idx_tickets_assignedAt')
   assignedAt: Date
 
   @Column({ type: 'timestamp', nullable: true })
@@ -84,7 +78,6 @@ export class Ticket {
   closedAt: Date
 
   @Column({ type: 'timestamp', nullable: true })
-  @Index('idx_tickets_slaDeadline')
   slaDeadline: Date
 
   @Column({ type: 'jsonb', nullable: true })
@@ -145,7 +138,6 @@ export class Ticket {
   attachments: any[]
 
   @CreateDateColumn()
-  @Index('idx_tickets_createdAt')
   createdAt: Date
 
   @UpdateDateColumn()

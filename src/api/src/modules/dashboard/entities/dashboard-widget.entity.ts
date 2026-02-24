@@ -7,7 +7,6 @@ export class DashboardWidget {
   id: string;
 
   @Column()
-  @Index('idx_widgets_userId')
   userId: string;
 
   @Column()

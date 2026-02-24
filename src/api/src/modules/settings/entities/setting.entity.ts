@@ -8,14 +8,12 @@ export class Setting {
   id: string;
 
   @Column({ nullable: true })
-  @Index('idx_settings_key')
   key: string;
 
   @Column({ type: 'text', nullable: true })
   value: string;
 
   @Column({ nullable: true })
-  @Index('idx_settings_category')
   category: string;
 
   @CreateDateColumn()

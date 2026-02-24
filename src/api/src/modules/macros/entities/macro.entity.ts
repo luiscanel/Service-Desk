@@ -9,11 +9,9 @@ export class Macro {
   id: string;
 
   @Column()
-  @Index('idx_macros_name')
   name: string;
 
   @Column({ nullable: true })
-  @Index('idx_macros_category')
   category: string;
 
   @Column('text')
@@ -23,7 +21,6 @@ export class Macro {
   subject: string;
 
   @Column({ default: true })
-  @Index('idx_macros_isActive')
   isActive: boolean;
 
   @Column({ default: 0 })

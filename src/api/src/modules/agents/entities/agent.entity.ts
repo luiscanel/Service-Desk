@@ -9,7 +9,6 @@ export class Agent {
   id: string;
 
   @Column({ nullable: true })
-  @Index('idx_agents_userId')
   userId: string;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE', nullable: true })
@@ -20,7 +19,6 @@ export class Agent {
   level: number;
 
   @Column({ default: true })
-  @Index('idx_agents_isAvailable')
   isAvailable: boolean;
 
   @Column('simple-array', { nullable: true })

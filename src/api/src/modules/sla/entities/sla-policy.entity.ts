@@ -9,14 +9,12 @@ export class SlaPolicy {
   id: string;
 
   @Column()
-  @Index('idx_sla_name')
   name: string;
 
   @Column({ nullable: true })
   description: string;
 
   @Column()
-  @Index('idx_sla_priority')
   priority: string;
 
   @Column()
@@ -26,7 +24,6 @@ export class SlaPolicy {
   resolutionTimeHours: number;
 
   @Column({ default: true })
-  @Index('idx_sla_isActive')
   isActive: boolean;
 
   @Column({ default: true })

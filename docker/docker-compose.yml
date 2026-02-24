@@ -12,7 +12,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - servicedesk_data:/var/lib/postgresql/data
     networks:
       - servicedesk-network
     restart: unless-stopped
@@ -45,10 +45,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - DATABASE_URL=postgresql://servicedesk:${DB_PASSWORD:-ChangeMe123}@postgres:5432/servicedesk
       - REDIS_URL=redis://redis:6379
-      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost,http://localhost:80,http://localhost:5173}
       - JWT_SECRET=${JWT_SECRET:-CHANGE_ME_IN_PRODUCTION}
     depends_on:
       postgres:
@@ -93,7 +93,7 @@ services:
     restart: unless-stopped
 
 volumes:
-  postgres_data:
+  servicedesk_data:
 
 networks:
   servicedesk-network:

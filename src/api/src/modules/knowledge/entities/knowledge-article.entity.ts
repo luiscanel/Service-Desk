@@ -14,7 +14,6 @@ export class KnowledgeArticle {
   content: string;
 
   @Column()
-  @Index('idx_knowledge_category')
   category: string;
 
   @Column('simple-array', { nullable: true })
@@ -27,7 +26,6 @@ export class KnowledgeArticle {
   views: number;
 
   @CreateDateColumn()
-  @Index('idx_knowledge_createdAt')
   createdAt: Date;
 
   @UpdateDateColumn()

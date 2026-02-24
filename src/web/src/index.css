@@ -27,6 +27,13 @@ body {
   min-height: 100vh;
 }
 
+.dark body {
+  @apply bg-slate-900 text-slate-100;
+  background-image: 
+    radial-gradient(ellipse at top left, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom right, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
@@ -34,11 +41,127 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-slate-100 rounded-full;
+  background-color: rgb(241 245 249);
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background-color: rgb(30 41 59);
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-300 rounded-full hover:bg-slate-400 transition-colors;
+  background-color: rgb(203 213 225);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(148 163 184);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background-color: rgb(71 85 105);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(100 116 139);
+}
+
+/* Dark mode overrides */
+.dark .bg-white\/80 {
+  background-color: rgb(15 23 42 / 0.8);
+}
+
+.dark .border-slate-200\/50 {
+  border-color: rgb(51 65 85 / 0.5);
+}
+
+.dark .bg-slate-100\/50 {
+  background-color: rgb(30 41 59 / 0.5);
+}
+
+.dark .text-slate-700 {
+  color: #cbd5e1;
+}
+
+.dark .text-slate-600 {
+  color: #94a3b8;
+}
+
+.dark .text-slate-500 {
+  color: #64748b;
+}
+
+.dark .text-slate-400 {
+  color: #94a3b8;
+}
+
+.dark .border-slate-200 {
+  @apply border-slate-700;
+}
+
+.dark .border-slate-100\/50 {
+  border-color: rgb(51 65 85 / 0.5);
+}
+
+.dark .bg-slate-50 {
+  background-color: rgb(15 23 42);
+}
+
+.dark .bg-slate-50\/30 {
+  background-color: rgb(30 41 59 / 0.3);
+}
+
+.dark .bg-blue-50 {
+  background-color: rgb(30 58 138 / 0.3);
+}
+
+.dark .hover\:bg-slate-50:hover {
+  background-color: rgb(30 41 59);
+}
+
+.dark .hover\:bg-slate-100:hover {
+  background-color: rgb(51 65 85);
+}
+
+/* Dark mode Card */
+.dark .card,
+.dark [class*="Card"] {
+  background-color: rgb(30 41 59 / 0.8);
+  border-color: rgb(51 65 85);
+}
+
+/* Dark mode inputs */
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: rgb(30 41 59);
+  border-color: rgb(71 85 105);
+  color: rgb(248 250 252);
+}
+
+.dark input::placeholder {
+  color: rgb(148 163 184);
+}
+
+/* Dark mode table */
+.dark table {
+  @apply text-slate-100;
+}
+
+.dark thead tr {
+  @apply bg-slate-800;
+}
+
+.dark th {
+  @apply text-slate-300;
+}
+
+.dark td {
+  @apply border-slate-700;
+}
+
+.dark tbody tr:hover {
+  @apply bg-slate-800/50;
 }
 
 /* Glassmorphism Utilities */

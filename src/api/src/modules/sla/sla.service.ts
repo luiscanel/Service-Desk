@@ -5,8 +5,6 @@ import { SlaPolicy } from './entities/sla-policy.entity';
 import { Ticket, TicketStatus, TicketPriority } from '../tickets/entities/ticket.entity';
 import { EmailService } from '../email/email.service';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
-import { WorkflowsService } from '../workflows/workflows.service';
-import { WorkflowTrigger } from '../workflows/entities/workflow.entity';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
@@ -20,7 +18,6 @@ export class SlaService implements OnModuleInit {
     private ticketRepo: Repository<Ticket>,
     private emailService: EmailService,
     private notificationsGateway: NotificationsGateway,
-    private workflowsService: WorkflowsService,
   ) {}
 
   async onModuleInit() {
@@ -112,13 +109,6 @@ export class SlaService implements OnModuleInit {
       
       // Send WebSocket notification
       this.notificationsGateway.emitSlaBreached(ticket);
-      
-      // Execute workflows - SLA breached
-      this.workflowsService.executeWorkflow(WorkflowTrigger.SLA_BREACHED, {
-        ticketId: ticket.id,
-        ticket,
-        policy,
-      }).catch(err => this.logger.error('Workflow error:', err));
     }
 
     // Check for tickets near breach (within 2 hours)
@@ -135,12 +125,6 @@ export class SlaService implements OnModuleInit {
     for (const ticket of nearBreachTickets) {
       this.logger.log(`SLA warning for ticket ${ticket.ticketNumber}`);
       this.notificationsGateway.emitSlaWarning(ticket);
-      
-      // Execute workflows - SLA warning
-      this.workflowsService.executeWorkflow(WorkflowTrigger.SLA_WARNING, {
-        ticketId: ticket.id,
-        ticket,
-      }).catch(err => this.logger.error('Workflow error:', err));
     }
   }
 

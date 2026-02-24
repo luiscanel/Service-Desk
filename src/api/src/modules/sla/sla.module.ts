@@ -9,14 +9,12 @@ import { SlaPolicy } from './entities/sla-policy.entity';
 import { Ticket } from '../tickets/entities/ticket.entity';
 import { EmailModule } from '../email/email.module';
 import { NotificationsModule } from '../notifications/notifications.module';
-import { WorkflowsModule } from '../workflows/workflows.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([SlaPolicy, Ticket]),
     EmailModule,
     NotificationsModule,
-    WorkflowsModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [SlaController, SlaMonitorController],
