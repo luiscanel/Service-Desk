@@ -53,8 +53,8 @@ export function Navbar() {
       {/* Search Bar */}
       <div className="flex items-center gap-4 flex-1 max-w-xl">
         <div className={`relative flex-1 transition-all duration-300 ${searchFocused ? 'scale-[1.02]' : ''}`}>
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <svg className={`w-5 h-5 transition-colors duration-300 ${searchFocused ? 'text-blue-500' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none`}>
+            <svg className={`w-5 h-5 transition-colors duration-300 ${searchFocused ? 'text-primary' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
@@ -63,7 +63,7 @@ export function Navbar() {
             placeholder="Buscar tickets, usuarios, agentes..."
             className={`w-full pl-12 pr-4 py-3 bg-slate-100/50 border-2 rounded-xl text-sm focus:outline-none transition-all duration-300 ${
               searchFocused 
-                ? 'bg-white border-blue-500 shadow-lg shadow-blue-500/10' 
+                ? 'bg-white border-primary shadow-lg shadow-primary/10' 
                 : 'border-transparent hover:bg-slate-100'
             }`}
             onFocus={() => setSearchFocused(true)}

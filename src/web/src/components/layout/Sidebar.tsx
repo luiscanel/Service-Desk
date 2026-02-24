@@ -76,20 +76,20 @@ const menuItems = [
 
 export function Sidebar() {
   return (
-    <aside className="w-72 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white min-h-screen flex flex-col relative overflow-hidden">
+    <aside className="w-72 bg-gradient-to-b from-primary-600 via-primary-700 to-dark-700 text-white min-h-screen flex flex-col relative overflow-hidden shadow-2xl">
       <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-0 -left-40 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 -right-40 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-0 -left-40 w-80 h-80 bg-primary/30 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 -right-40 w-80 h-80 bg-secondary/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
       </div>
       
       <div className="relative z-10 p-6 border-b border-slate-700/50">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-blue-500/30 animate-float">
+          <div className="w-12 h-12 bg-gradient-to-br from-primary via-primary-400 to-secondary rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-primary/30 animate-float">
             🎫
           </div>
           <div>
             <div className="font-bold text-xl tracking-tight">Teknao</div>
-            <div className="text-xs text-blue-400 font-medium">Service Desk</div>
+            <div className="text-xs text-secondary font-medium">Service Desk</div>
           </div>
         </div>
       </div>
@@ -121,7 +121,7 @@ export function Sidebar() {
             className={({ isActive }) =>
               `flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 group relative overflow-hidden ${
                 isActive 
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-600/30' 
+                  ? 'bg-gradient-to-r from-primary to-primary-600 text-white shadow-lg shadow-primary/30' 
                   : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'
               }`
             }
@@ -141,7 +141,7 @@ export function Sidebar() {
 
       <div className="relative z-10 p-4 border-t border-slate-700/50">
         <div className="flex items-center gap-3 px-4 py-3 bg-slate-800/50 rounded-xl">
-          <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-xs font-bold">
+          <div className="w-8 h-8 bg-gradient-to-br from-secondary to-secondary-600 rounded-full flex items-center justify-center text-xs font-bold">
             v2
           </div>
           <div className="text-xs text-slate-400">
