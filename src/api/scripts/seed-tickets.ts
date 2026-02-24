@@ -1,7 +1,7 @@
 // Seed script to create sample tickets for the dashboard
 import { DataSource } from 'typeorm';
 import { Ticket, TicketStatus, TicketPriority } from '../src/modules/tickets/entities/ticket.entity';
-import { User } from '../src/modules/users/entities/user.entity';
+import { User, UserRole } from '../src/modules/users/entities/user.entity';
 import { Agent } from '../src/modules/agents/entities/agent.entity';
 
 const dataSource = new DataSource({
@@ -19,16 +19,16 @@ async function seed() {
   
   console.log('🔄 Creating sample users...');
   const users = await dataSource.getRepository(User).save([
-    { email: 'admin@servicedesk.com', displayName: 'Administrator', role: 'admin', isActive: true },
-    { email: 'juan.perez@empresa.com', displayName: 'Juan Pérez', role: 'user', isActive: true },
-    { email: 'maria.garcia@empresa.com', displayName: 'María García', role: 'user', isActive: true },
-    { email: 'carlos.lopez@empresa.com', displayName: 'Carlos López', role: 'user', isActive: true },
-    { email: 'ana.martinez@empresa.com', displayName: 'Ana Martínez', role: 'user', isActive: true },
+    { email: 'admin@servicedesk.com', password: 'hashed_password', firstName: 'Admin', lastName: 'istrator', role: UserRole.ADMIN, isActive: true },
+    { email: 'juan.perez@empresa.com', password: 'hashed_password', firstName: 'Juan', lastName: 'Pérez', role: UserRole.USER, isActive: true },
+    { email: 'maria.garcia@empresa.com', password: 'hashed_password', firstName: 'María', lastName: 'García', role: UserRole.USER, isActive: true },
+    { email: 'carlos.lopez@empresa.com', password: 'hashed_password', firstName: 'Carlos', lastName: 'López', role: UserRole.USER, isActive: true },
+    { email: 'ana.martinez@empresa.com', password: 'hashed_password', firstName: 'Ana', lastName: 'Martínez', role: UserRole.USER, isActive: true },
   ]);
 
   console.log('🔄 Creating sample agents...');
   const agents = await dataSource.getRepository(Agent).save([
-    { userId: users[0].id, level: 3, isAvailable: true, skills: 'redes,sistemas,base de datos', ticketCapacity: 10, currentTickets: 3 },
+    { userId: users[0].id, level: 3, isAvailable: true, skills: ['redes', 'sistemas', 'base de datos'], ticketCapacity: 10, currentTickets: 3 },
   ]);
 
   console.log('🔄 Creating sample tickets...');
